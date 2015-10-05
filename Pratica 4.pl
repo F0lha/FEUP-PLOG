@@ -49,3 +49,29 @@ substitui(X,Y,[H|L],L1):- substitui(X,Y,L,L2), append([H],L2,L1).
 elimina_duplicados([],[]).
 elimina_duplicados([X|L1],L2):- delete_all(X,L1,L3), elimina_duplicados(L3,L4), append([X],L4,L2).
 
+ordenada([_|[]]).
+ordenada([X|L]):- 
+	ordenada2(X,L),
+	ordenada(L).
+ordenada2(X,[Y|_]):- Y > X.
+
+ordena(L1,L2):- 
+	ordena2([],L1,L2).
+
+ordena2(L,[],L).
+
+ordena2(LA,[X|LPOS],LF):-
+	ordem(X,LPOS),
+	append(LA,[X],L1),
+	ordena2(L1,LPOS,LF).
+ordena2(LA,[X|LPOS],LF):-
+	troca(X,LPOS,LPOS2),
+	append(LA,LPOS2,LN),
+	ordena2([],LN,LF).
+	
+ordem(_,[]).
+ordem(X,[Y|_]):- Y > X.
+
+troca(X,[Y|L],LN):-
+	append([Y],[X],LN2),
+	append(LN2,L,LN).
