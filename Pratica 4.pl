@@ -26,3 +26,26 @@ delete_one(X,[H|L1],L2):- delete_one(X,L1,L3), append([H],L3,L2).
 delete_all(_,[],[]).
 delete_all(X,[X|L1],L2):- delete_all(X,L1,L2).
 delete_all(X,[H|L1],L2):- delete_all(X,L1,L3), append([H],L3,L2).
+
+
+delete_all_list([],L,L).
+delete_all_list([X|LX],L1,L2):-delete_all(X,L1,L3), delete_all_list(LX,L3,L2).
+
+
+before(A,B,L):- append(_,[A|L2],L),
+	append(_,[B|_],L2).
+	
+conta([],0).
+conta([_|L],N):-conta(L,N1),N is N1 + 1.
+
+conta_elem(_,[],0).
+conta_elem(X,[X|L],N):-conta_elem(X,L,N1), N is N1 + 1.
+conta_elem(X,[H|L],N):- X\=H, conta_elem(X,L,N).
+
+substitui(_,_,[],[]).
+substitui(X,Y,[X|L],L1):- substitui(X,Y,L,L2), append([Y],L2,L1).
+substitui(X,Y,[H|L],L1):- substitui(X,Y,L,L2), append([H],L2,L1).
+
+elimina_duplicados([],[]).
+elimina_duplicados([X|L1],L2):- delete_all(X,L1,L3), elimina_duplicados(L3,L4), append([X],L4,L2).
+
