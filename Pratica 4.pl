@@ -70,8 +70,17 @@ ordena2(LA,[X|LPOS],LF):-
 	ordena2([],LN,LF).
 	
 ordem(_,[]).
-ordem(X,[Y|_]):- Y > X.
+ordem(X,[Y|_]):- Y >= X.
 
 troca(X,[Y|L],LN):-
 	append([Y],[X],LN2),
 	append(LN2,L,LN).
+	
+	
+for(A,N,I):- N >= A, (I is N;(N1 is N -1,for(A,N1, I))).
+	
+
+permutacao([],[]).
+
+permutacao(L1,[C|L2]):- length(L1,N),for(1,N,I),n_th(L1,I,C),delete_one(C,L1,L),permutacao(L,L2).
+	

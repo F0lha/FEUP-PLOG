@@ -15,11 +15,26 @@ initial_board(
 	[0,0,0,1,1,1,1,1,0,0,0],
 	[0,0,0,0,0,0,0,0,0,0,0]]).
 	
+	final_board(
+	[[0,0,0,0,1,0,2,0,5,0,0],
+	[0,0,0,1,0,0,0,0,0,0,0],
+	[0,1,2,0,0,2,0,0,0,1,0],
+	[0,0,1,0,0,0,0,0,1,0,0],	
+	[0,0,0,0,0,0,0,0,0,1,0],
+	[0,0,0,0,0,0,0,0,0,0,0],	
+	[0,1,0,2,0,0,0,2,0,1,0],
+	[0,1,0,0,1,1,2,0,0,0,0],
+	[0,0,0,0,0,0,1,0,0,0,0],
+	[0,0,0,0,0,0,0,1,0,0,0],
+	[0,0,0,0,0,0,0,0,0,0,0]]).
+	
 
 init:-
 write('BEM-VINDO AO BREAKTHRU'),
-initial_board(Board), %%% Declare Board as the Board Variable
-visualiza_estado(Board),
+final_board(Board), %%% Declare Board as the Board Variable
+nl,
+nl,
+printTable(Board),
 findElem(4,Board).
 
 
@@ -38,26 +53,51 @@ on(Item,[Item|Rest]).
 on(Item,[DisregardHead|Tail]):- on(Item,Tail).
 
 %%%%%%%%%%%%%%%%%%%%%% COPIADO CARALHO CUIDADO %%%%%%%%%%%%%%%%%%%%%%
-%visualiza_estado(+Tabuleiro)
-visualiza_estado(Tab):-
+
+printTable(Table):-
 	nl,
-	mostra_linhas(1,Tab),
+	printFirstLine(_),
+	nl,nl,
+	printLines(1,Table),
 	nl.
+printLines(_,[]).
 
-mostra_linhas(_,[]).
-mostra_linhas(N,[Lin|Resto]):-
-	mostra_linha(Lin), write(' '), nl,
-	N2 is N+1,
-	mostra_linhas(N2, Resto).
+printLines(1,[Lin|Resto]):-
+	write(1), write(' |'),printLine(Lin), write('    W | C | E'),
+	nl,
+	printUnderscores(_),nl,
+	printLines(2,Resto).
+	
+printLines(2,[Lin|Resto]):-
+	write(2), write(' |'),printLine(Lin), write('    SW| S |SE'),
+	nl,
+	printUnderscores(_),nl,
+	printLines(3,Resto).
+	
+printLines(N,[Lin|Resto]):- N < 10,N > 2,
+	write(N), write(' |'),printLine(Lin), nl,
+	printUnderscores(0),nl,
+	N2 is N + 1,
+	printLines(N2,Resto).
+	
+printLines(N,[Lin|Resto]):- N >= 10,
+	write(N), write('|'),printLine(Lin), nl,
+	N2 is N + 1,
+	printUnderscores(0),nl,
+	printLines(N2,Resto).
 
-mostra_linha([]).
-mostra_linha([El|Resto]):-
-	escreve(El),
-	mostra_linha(Resto).
+printLine([]).
+printLine([El|Resto]):-
+	writePiece(El),
+	printLine(Resto).
+	
+printUnderscores(_):-write('_______________________________________________').
 
-escreve(0):-write(' .').
-escreve(1):-write(' D'). %%%% Defesa %%%%
-escreve(2):-write(' A'). %%%% Ataque %%%%
-escreve(5):-write(' O'). %%%% Objetivo %%%%
+printFirstLine(_):-write('    1   2   3   4   5   6   7   8   9   10  11     NW| N |NE').
+
+writePiece(0):-write(' . |').
+writePiece(1):-write(' D |'). %%%% Defesa %%%%
+writePiece(2):-write(' A |'). %%%% Ataque %%%%
+writePiece(5):-write(' M |'). %%%% Objetivo %%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
