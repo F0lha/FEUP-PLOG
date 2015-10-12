@@ -35,10 +35,23 @@ final_board(Board), %%% Declare Board as the Board Variable
 nl,
 nl,
 printTable(Board),
-findElem(4,Board).
+nl,nl,
+movePiece(Board,9,1,9,2,NewBoard),
+nl,nl,
+printTable(NewBoard).
 
 
 %%%%%%%%%%%%%%%%%%% Validacao de Jogadas %%%%%%%%%%%%%%%%%%%%%%%
+
+%whatValue(Board,X,Y,Value).
+
+whatValue([H|_],1,0,Value):- Value is H.
+
+whatValue([_|Rest], X, 0, Value):- X2 is X - 1,whatValue(Rest,X2,0,Value).
+
+whatValue([H|_], X, Y, Value):- X > 0, Y2 is Y -1, Y2 =:= 0,whatValue(H,X,Y2,Value).
+
+whatValue([_|Rest], X, Y, Value):- X > 0, Y2 is Y-1,whatValue(Rest,X,Y2,Value).
 
 findElem(Elem,[Elem|_]).
 
@@ -48,9 +61,19 @@ findElem(Elem,[X|Rest]):- \+(is_list(X)),findElem(Elem,Rest).
 
 %%%%%%%%%%%%%%%%%% Movimentação de Peças %%%%%%%%%%%%%%%%%%%%%%%%
 
-on(Item,[Item|Rest]).
+movePiece(Board,X,Y,XF,YF,NewBoard):-whatValue(Board,X,Y,Value),defineSpace(Board,X,Y,0,TempBoard),defineSpace(TempBoard,XF,YF,Value,NewBoard).
 
-on(Item,[DisregardHead|Tail]):- on(Item,Tail).
+defineSpace([],_,_,_,[]).
+
+defineSpace([_|Rest],1,0,NewValue,NewBoard):-append([NewValue],Rest,NewBoard).
+
+defineSpace([H|Rest],X,0,NewValue,NewBoard):- X2 is X - 1, defineSpace(Rest,X2,0,NewValue,NewBoard2),append([H],NewBoard2,NewBoard).
+
+defineSpace([H|Rest], X, Y, NewValue, NewBoard):- X > 0, Y2 is Y -1, Y2 =:= 0, defineSpace(H,X,Y2,NewValue,NewBoard2),append([NewBoard2],Rest,NewBoard).
+
+defineSpace([H|Rest], X, Y, NewValue, NewBoard):- X > 0, Y2 is Y-1,defineSpace(Rest,X,Y2,NewValue,NewBoard2),append([H],NewBoard2,NewBoard).
+
+
 
 %%%%%%%%%%%%%%%%%%%%%% COPIADO CARALHO CUIDADO %%%%%%%%%%%%%%%%%%%%%%
 
