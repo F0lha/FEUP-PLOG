@@ -45,13 +45,7 @@ printTable(NewBoard).
 
 %whatValue(Board,X,Y,Value).
 
-whatValue([H|_],1,0,Value):- Value is H.
-
-whatValue([_|Rest], X, 0, Value):- X2 is X - 1,whatValue(Rest,X2,0,Value).
-
-whatValue([H|_], X, Y, Value):- X > 0, Y2 is Y -1, Y2 =:= 0,whatValue(H,X,Y2,Value).
-
-whatValue([_|Rest], X, Y, Value):- X > 0, Y2 is Y-1,whatValue(Rest,X,Y2,Value).
+whatValue(Board,X,Y,Value):-X2 is X - 1, Y2 is Y -1, nth0(Y2,Board,List),nth0(X2,List,Value).
 
 findElem(Elem,[Elem|_]).
 
