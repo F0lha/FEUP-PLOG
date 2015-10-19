@@ -2,6 +2,9 @@
 
 :-use_module(library(lists)).
 
+%%% Jogador Amarelo = 0 %%%
+%%% Jogador Cinzento = 1 %%%
+
 initial_board(
 	[[0,0,0,0,0,0,0,0,0,0,0],
 	[0,0,0,1,1,1,1,1,0,0,0],
@@ -35,9 +38,13 @@ final_board(Board), %%% Declare Board as the Board Variable
 nl,
 nl,
 printTable(Board),
-nl,nl,
-movePiece(Board,9,1,9,2,NewBoard),
-nl,nl,
+nl,
+write('passou1'),
+nl,
+playerMove(Board,7,1,9,2,1,NewBoard),
+nl,
+write('passou2'),
+nl,
 printTable(NewBoard).
 
 
@@ -54,6 +61,13 @@ findElem(Elem,[X|Rest]):- is_list(X),findElem(Elem,X);findElem(Elem,Rest).
 findElem(Elem,[X|Rest]):- \+(is_list(X)),findElem(Elem,Rest).
 
 %%%%%%%%%%%%%%%%%% Movimentação de Peças %%%%%%%%%%%%%%%%%%%%%%%%
+
+playerMove(Board,X,Y,XF,YF,Player,NewBoard):-whatPlayer(Board,X,Y,Player2), Player2 =:= Player, movePiece(Board,X,Y,XF,YF,NewBoard).
+playerMove(Board,_,_,_,_,_,Board).
+
+whatPlayer(Board,X,Y,Player):- whatValue(Board,X,Y,Value), (Value =:= 2;Value =:=5),Player is 0.
+whatPlayer(Board,X,Y,Player):- whatValue(Board,X,Y,Value), Value =:= 1, Player is 1.
+whatPlayer(_,_,_,Player):- Player is -1.
 
 movePiece(Board,X,Y,XF,YF,NewBoard):-whatValue(Board,X,Y,Value),defineSpace(Board,X,Y,0,TempBoard),defineSpace(TempBoard,XF,YF,Value,NewBoard).
 
