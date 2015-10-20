@@ -41,7 +41,7 @@ printTable(Board),
 nl,
 write('passou1'),
 nl,
-playerMove(Board,7,1,9,2,1,NewBoard),
+chooseMov(Board,0,NewBoard),
 nl,
 write('passou2'),
 nl,
@@ -62,12 +62,30 @@ findElem(Elem,[X|Rest]):- \+(is_list(X)),findElem(Elem,Rest).
 
 %%%%%%%%%%%%%%%%%% Movimentação de Peças %%%%%%%%%%%%%%%%%%%%%%%%
 
-playerMove(Board,X,Y,XF,YF,Player,NewBoard):-whatPlayer(Board,X,Y,Player2), Player2 =:= Player, movePiece(Board,X,Y,XF,YF,NewBoard).
-playerMove(Board,_,_,_,_,_,Board).
 
-whatPlayer(Board,X,Y,Player):- whatValue(Board,X,Y,Value), (Value =:= 2;Value =:=5),Player is 0.
-whatPlayer(Board,X,Y,Player):- whatValue(Board,X,Y,Value), Value =:= 1, Player is 1.
-whatPlayer(_,_,_,Player):- Player is -1.
+
+
+chooseMov(Board,Player,NewBoard):- write('Que peça deseja mover?'),nl,write('X = '), read(X),nl, write('Y = '), read(Y),nl,
+								playerCost(Board,X,Y,RightPlayer,_),RightPlayer =:= Player,
+								write('New X = '), read(XF),nl, write('New Y = '),read(YF),nl,
+								playerMove(Board,X,Y,XF,YF,Player,2,_,NewBoard).
+									
+
+
+playerMove(Board,X,Y,XF,YF,Player,CostLeft,NewCost,NewBoard):-playerCost(Board,X,Y,Player2,Cost), checkCost(CostLeft,Cost,NewCost), Player2 =:= Player, movePiece(Board,X,Y,XF,YF,NewBoard),write('Move done with '),write(NewCost),write(' cost left'),nl.
+
+playerMove(Board,_,_,_,_,_,_,_,Board):-print('Move not done'),nl.
+
+checkCost(CostLeft,Cost,NewCost):-Cost =< CostLeft, NewCost is (CostLeft-Cost).
+
+
+
+
+
+playerCost(Board,X,Y,0,1):- whatValue(Board,X,Y,Value), Value =:= 2.
+playerCost(Board,X,Y,0,2):- whatValue(Board,X,Y,Value), Value =:= 5.
+playerCost(Board,X,Y,1,1):- whatValue(Board,X,Y,Value), Value =:= 1.
+playerCost(_,_,_,-1,0).
 
 movePiece(Board,X,Y,XF,YF,NewBoard):-whatValue(Board,X,Y,Value),defineSpace(Board,X,Y,0,TempBoard),defineSpace(TempBoard,XF,YF,Value,NewBoard).
 
