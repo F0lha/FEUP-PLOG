@@ -53,6 +53,29 @@ printTable(NewBoard).
 
 %%%%%%%%%%%%%%%%%%% Validacao de Jogadas %%%%%%%%%%%%%%%%%%%%%%%
 
+%inLine(Board,X,Y,XF,YF).
+
+inLine(Board,X,Y,XF,YF):-(X =:= XF, YF>=Y,between(Y,YF,Index),whatValue(Board,X,Index,Value),Value =:= 0);
+							(X =:= XF, Y > YF, between(YF,Y,Index),whatValue(Board,X,Index,Value),Value =:= 0);
+							(Y =:= YF,XF>=X, between(X,XF,Index),whatValue(Board,Index,Y,Value),Value =:= 0);
+							(Y =:= YF,X > XF, between(XF,X,Index),whatValue(Board,Index,Y,Value),Value =:= 0).
+
+%adjacent(X,Y,XF,YF).
+
+adjacent(X,Y,XF,YF):-XT is X + 1, XB is X - 1,YT is Y + 1, YB is Y - 1,(
+					(XF =:= XT, YF =:= YT);
+					(XF =:= XB, YF =:= YT);
+					(XF =:= XT, YF =:= YB);
+					(XF =:= XB, YF =:= YB)).
+
+%validMove(Board,X,Y,Player).
+
+validMove(Board,X,Y,XF,YF,Player,MoreValue):-(adjacent(X,Y,XF,YF),playerCost(Board,XF,YF,Player2,_), Player2 \= -1,Player\=Player2,MoreValue is 1);
+											(inLine(Board,X,Y,XF,YF), MoreValue is 0).
+											
+validMove(_,_,_,_,_,_,-1).
+
+
 %continueGame(Board).
 
 continueGame(Board):- findElem(5,Board), \+(isOnEdge(Board)).
@@ -79,27 +102,25 @@ findElem(Elem,[X|Rest]):- \+(is_list(X)),findElem(Elem,Rest).
 
 playFirst(Board):-printTable(Board),play(Board,0).
 
-play(Board,0):-continueGame(Board), chooseMov(Board,0,NewBoard),printTable(NewBoard),!,play(NewBoard,1).
-play(Board,1):-continueGame(Board), chooseMov(Board,1,NewBoard),printTable(NewBoard),!,play(NewBoard,0).
+play(Board,0):-continueGame(Board), chooseMove(Board,0,NewBoard,2),!,play(NewBoard,1).
+play(Board,1):-continueGame(Board), chooseMove(Board,1,NewBoard,2),!,play(NewBoard,0).
 play(_,0):-write('Jogador Cinzento ganhou!').
 play(_,1):-write('Jogador Amarelo ganhou!').
 
-chooseMov(Board,Player,NewBoard):- write('Que peça deseja mover? Jogador '),write(Player),nl,write('X = '), read(X),nl, write('Y = '), read(Y),nl,
-								playerCost(Board,X,Y,RightPlayer,_),RightPlayer =:= Player,
-								write('New X = '), read(XF),nl, write('New Y = '),read(YF),nl,
-								playerMove(Board,X,Y,XF,YF,Player,2,_,NewBoard).
-chooseMov(Board,Player,NewBoard):-	write('Jogada Impossivel'),nl,chooseMov(Board,Player,NewBoard),!.
-
-
-playerMove(Board,X,Y,XF,YF,Player,CostLeft,NewCost,NewBoard):-playerCost(Board,X,Y,Player2,Cost), checkCost(CostLeft,Cost,NewCost), Player2 =:= Player, movePiece(Board,X,Y,XF,YF,NewBoard),write('Move done with '),write(NewCost),write(' cost left'),nl.
-
-playerMove(Board,_,_,_,_,_,_,_,Board):-print('Move not done'),nl.
+%chooseMove(Board,Player,NewBoard,CostLeft)
+chooseMove(Board,_,Board,0).
+chooseMove(Board,Player,NewBoard,CostLeft):- write('Que peça deseja mover? Jogador '),write(Player),write(' com '),write(CostLeft),write(' Jogadas:')
+										,nl,write('X = '), read(X),nl, write('Y = '), read(Y),nl,
+										playerCost(Board,X,Y,RightPlayer,Diff),checkCost(CostLeft,Diff,NewCost), RightPlayer =:= Player,
+										write('New X = '), read(XF),nl, write('New Y = '),read(YF),nl,
+										validMove(Board,X,Y,XF,YF,Player,MoreValue),MoreValue >= 0, checkCost(NewCost,MoreValue,NewestCost),
+										movePiece(Board,X,Y,XF,YF,NewBoard2),
+										printTable(NewBoard2),
+										chooseMove(NewBoard2,Player,NewBoard,NewestCost),!.
+										
+chooseMove(Board,Player,NewBoard,CostLeft):-write('Jogada Impossivel'),nl,nl,chooseMove(Board,Player,NewBoard,CostLeft),!.
 
 checkCost(CostLeft,Cost,NewCost):-Cost =< CostLeft, NewCost is (CostLeft-Cost).
-
-
-
-
 
 playerCost(Board,X,Y,0,1):- whatValue(Board,X,Y,Value), Value =:= 2.
 playerCost(Board,X,Y,0,2):- whatValue(Board,X,Y,Value), Value =:= 5.
