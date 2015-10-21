@@ -1,6 +1,7 @@
 
 
 :-use_module(library(lists)).
+:-use_module(library(between)).
 
 %%% Jogador Amarelo = 0 %%%
 %%% Jogador Cinzento = 1 %%%
@@ -19,7 +20,7 @@ initial_board(
 	[0,0,0,0,0,0,0,0,0,0,0]]).
 	
 	final_board(
-	[[0,0,0,0,1,0,2,0,5,0,0],
+	[[0,0,0,0,1,0,2,0,0,0,0],
 	[0,0,0,1,0,0,0,0,0,0,0],
 	[0,1,2,0,0,2,0,0,0,1,0],
 	[0,0,1,0,0,0,0,0,1,0,0],	
@@ -27,11 +28,13 @@ initial_board(
 	[0,0,0,0,0,0,0,0,0,0,0],	
 	[0,1,0,2,0,0,0,2,0,1,0],
 	[0,1,0,0,1,1,2,0,0,0,0],
-	[0,0,0,0,0,0,1,0,0,0,0],
+	[0,0,0,0,0,5,1,0,0,0,0],
 	[0,0,0,0,0,0,0,1,0,0,0],
 	[0,0,0,0,0,0,0,0,0,0,0]]).
-	
 
+	
+testing:-final_board(Board),playFirst(Board).
+	
 init:-
 write('BEM-VINDO AO BREAKTHRU'),
 final_board(Board), %%% Declare Board as the Board Variable
@@ -50,6 +53,18 @@ printTable(NewBoard).
 
 %%%%%%%%%%%%%%%%%%% Validacao de Jogadas %%%%%%%%%%%%%%%%%%%%%%%
 
+%continueGame(Board).
+
+continueGame(Board):- findElem(5,Board), \+(isOnEdge(Board)).
+continueGame(_):- fail.
+
+%isOnEdge(Board).
+
+isOnEdge(Board):-between(1,11,Index),((whatValue(Board,Index,1,Value),Value=:=5);
+										(whatValue(Board,Index,11,Value),Value=:=5);
+										(whatValue(Board,1,Index,Value),Value=:=5);
+										(whatValue(Board,11,Index,Value),Value=:=5)).
+
 %whatValue(Board,X,Y,Value).
 
 whatValue(Board,X,Y,Value):-X2 is X - 1, Y2 is Y -1, nth0(Y2,Board,List),nth0(X2,List,Value).
@@ -62,14 +77,18 @@ findElem(Elem,[X|Rest]):- \+(is_list(X)),findElem(Elem,Rest).
 
 %%%%%%%%%%%%%%%%%% Movimentação de Peças %%%%%%%%%%%%%%%%%%%%%%%%
 
+playFirst(Board):-printTable(Board),play(Board,0).
 
+play(Board,0):-continueGame(Board), chooseMov(Board,0,NewBoard),printTable(NewBoard),!,play(NewBoard,1).
+play(Board,1):-continueGame(Board), chooseMov(Board,1,NewBoard),printTable(NewBoard),!,play(NewBoard,0).
+play(_,0):-write('Jogador Cinzento ganhou!').
+play(_,1):-write('Jogador Amarelo ganhou!').
 
-
-chooseMov(Board,Player,NewBoard):- write('Que peça deseja mover?'),nl,write('X = '), read(X),nl, write('Y = '), read(Y),nl,
+chooseMov(Board,Player,NewBoard):- write('Que peça deseja mover? Jogador '),write(Player),nl,write('X = '), read(X),nl, write('Y = '), read(Y),nl,
 								playerCost(Board,X,Y,RightPlayer,_),RightPlayer =:= Player,
 								write('New X = '), read(XF),nl, write('New Y = '),read(YF),nl,
 								playerMove(Board,X,Y,XF,YF,Player,2,_,NewBoard).
-									
+chooseMov(Board,Player,NewBoard):-	write('Jogada Impossivel'),nl,chooseMov(Board,Player,NewBoard),!.
 
 
 playerMove(Board,X,Y,XF,YF,Player,CostLeft,NewCost,NewBoard):-playerCost(Board,X,Y,Player2,Cost), checkCost(CostLeft,Cost,NewCost), Player2 =:= Player, movePiece(Board,X,Y,XF,YF,NewBoard),write('Move done with '),write(NewCost),write(' cost left'),nl.
