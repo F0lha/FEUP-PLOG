@@ -25,7 +25,7 @@ initial_board(
 	[0,1,2,0,0,2,0,0,0,1,0],
 	[0,0,1,0,0,0,0,0,1,0,0],	
 	[0,0,0,0,0,0,0,0,0,1,0],
-	[0,0,0,0,0,0,0,0,0,0,0],	
+	[0,0,0,0,0,0,0,0,1,0,2],	
 	[0,1,0,2,0,0,0,2,0,1,0],
 	[0,1,0,0,1,1,2,0,0,0,0],
 	[0,0,0,0,0,5,1,0,0,0,0],
@@ -83,7 +83,7 @@ adjacent(X,Y,XF,YF):-XT is X + 1, XB is X - 1,YT is Y + 1, YB is Y - 1,(
 
 %validMove(Board,X,Y,Player).
 
-validMove(Board,X,Y,XF,YF,Player,MoreValue):-(adjacent(X,Y,XF,YF),playerCost(Board,XF,YF,Player2,_), Player2 \= -1,Player\=Player2,MoreValue is 1);
+validMove(Board,X,Y,XF,YF,Player,MoreValue):-(adjacent(X,Y,XF,YF),playerCost(Board,XF,YF,Player2,_), Player2 =\= -1,Player=\=Player2,whatValue(Board,X,Y,Value),((Value=:= 5, MoreValue is 0);(MoreValue is 1)));
 											(inLine(Board,X,Y,XF,YF), MoreValue is 0).
 											
 validMove(_,_,_,_,_,_,-1).
@@ -100,10 +100,6 @@ isOnEdge(Board):-between(1,11,Index),((whatValue(Board,Index,1,Value),Value=:=5)
 										(whatValue(Board,Index,11,Value),Value=:=5);
 										(whatValue(Board,1,Index,Value),Value=:=5);
 										(whatValue(Board,11,Index,Value),Value=:=5)).
-
-%whatValue(Board,X,Y,Value).
-
-whatValue(Board,X,Y,Value):-X2 is X - 1, Y2 is Y -1, nth0(Y2,Board,List),nth0(X2,List,Value).
 
 findElem(Elem,[Elem|_]).
 
@@ -122,7 +118,7 @@ play(_,1):-write('Jogador Amarelo ganhou!').
 
 %chooseMove(Board,Player,NewBoard,CostLeft)
 chooseMove(Board,_,Board,0).
-chooseMove(Board,Player,NewBoard,CostLeft):- write('Que peça deseja mover? Jogador '),write(Player),write(' com '),write(CostLeft),write(' Jogadas:')
+chooseMove(Board,Player,NewBoard,CostLeft):- write('Que peca deseja mover? Jogador '),write(Player),write(' com '),write(CostLeft),write(' Jogadas:')
 										,nl,write('X = '), read(X),nl, write('Y = '), read(Y),nl,
 										playerCost(Board,X,Y,RightPlayer,Diff),checkCost(CostLeft,Diff,NewCost), RightPlayer =:= Player,
 										write('New X = '), read(XF),nl, write('New Y = '),read(YF),nl,
@@ -152,6 +148,13 @@ defineSpace([H|Rest], X, Y, NewValue, NewBoard):- X > 0, Y2 is Y -1, Y2 =:= 0, d
 
 defineSpace([H|Rest], X, Y, NewValue, NewBoard):- X > 0, Y2 is Y-1,defineSpace(Rest,X,Y2,NewValue,NewBoard2),append([H],NewBoard2,NewBoard).
 
+
+%%%%%%%%%%%%%%%%%%%%% FUNCOES AUXILIARES   %%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%whatValue(Board,X,Y,Value).
+
+whatValue(Board,X,Y,Value):-X2 is X - 1, Y2 is Y -1, nth0(Y2,Board,List),nth0(X2,List,Value).
 
 
 %%%%%%%%%%%%%%%%%%%%%% COPIADO CARALHO CUIDADO %%%%%%%%%%%%%%%%%%%%%%
