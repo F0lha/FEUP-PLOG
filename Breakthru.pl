@@ -33,7 +33,7 @@ initial_board(
 	[0,0,0,0,0,0,0,0,0,0,0]]).
 
 	
-testing:-menu.
+testing:-final_board(Board),checkMate(Board).
 	
 init:-
 write('BEM-VINDO AO BREAKTHRU'),
@@ -68,14 +68,14 @@ credits:-nl, write('Jogo feito por Joao Baiao e Pedro Castro'),nl, nl.
 
 %inLine(Board,X,Y,XF,YF).
 
-inLine(Board,X,Y,XF,YF):-(X =:= XF, YF>=Y,between(Y,YF,Index),whatValue(Board,X,Index,Value),Value =:= 0);
-							(X =:= XF, Y > YF, between(YF,Y,Index),whatValue(Board,X,Index,Value),Value =:= 0);
-							(Y =:= YF,XF>=X, between(X,XF,Index),whatValue(Board,Index,Y,Value),Value =:= 0);
-							(Y =:= YF,X > XF, between(XF,X,Index),whatValue(Board,Index,Y,Value),Value =:= 0).
+inLine(Board,X,Y,XF,YF):-(X =:= XF, YF>=Y,between(Y,YF,Index),whatValue(Board,X,Index,Value),Value =\= 0,fail);
+							(X =:= XF, Y > YF, between(YF,Y,Index),whatValue(Board,X,Index,Value),Value =\= 0,fail);
+							(Y =:= YF,XF>=X, between(X,XF,Index),whatValue(Board,Index,Y,Value),Value =\= 0,fail);
+							(Y =:= YF,X > XF, between(XF,X,Index),whatValue(Board,Index,Y,Value),Value =\= 0,fail).
 
-%adjacent(X,Y,XF,YF).
+%diagonal(X,Y,XF,YF).
 
-adjacent(X,Y,XF,YF):-XT is X + 1, XB is X - 1,YT is Y + 1, YB is Y - 1,(
+diagonal(X,Y,XF,YF):-XT is X + 1, XB is X - 1,YT is Y + 1, YB is Y - 1,(
 					(XF =:= XT, YF =:= YT);
 					(XF =:= XB, YF =:= YT);
 					(XF =:= XT, YF =:= YB);
@@ -83,7 +83,7 @@ adjacent(X,Y,XF,YF):-XT is X + 1, XB is X - 1,YT is Y + 1, YB is Y - 1,(
 
 %validMove(Board,X,Y,Player).
 
-validMove(Board,X,Y,XF,YF,Player,MoreValue):-(adjacent(X,Y,XF,YF),playerCost(Board,XF,YF,Player2,_), Player2 =\= -1,Player=\=Player2,whatValue(Board,X,Y,Value),((Value=:= 5, MoreValue is 0);(MoreValue is 1)));
+validMove(Board,X,Y,XF,YF,Player,MoreValue):-(diagonal(X,Y,XF,YF),playerCost(Board,XF,YF,Player2,_), Player2 =\= -1,Player=\=Player2,whatValue(Board,X,Y,Value),((Value=:= 5, MoreValue is 0);(MoreValue is 1)));
 											(inLine(Board,X,Y,XF,YF), MoreValue is 0).
 											
 validMove(_,_,_,_,_,_,-1).
@@ -118,7 +118,7 @@ play(_,1):-write('Jogador Amarelo ganhou!').
 
 %chooseMove(Board,Player,NewBoard,CostLeft)
 chooseMove(Board,_,Board,0).
-chooseMove(Board,Player,NewBoard,CostLeft):- write('Que peca deseja mover? Jogador '),write(Player),write(' com '),write(CostLeft),write(' Jogadas:')
+chooseMove(Board,Player,NewBoard,CostLeft):- write('Que peca deseja mover? Jogador '),((Player =:= 0, write('Amarelo'));(Player =:= 1,write('Cinzento'))),write(' com '),write(CostLeft),write(' Jogadas:')
 										,nl,write('X = '), read(X),nl, write('Y = '), read(Y),nl,
 										playerCost(Board,X,Y,RightPlayer,Diff),checkCost(CostLeft,Diff,NewCost), RightPlayer =:= Player,
 										write('New X = '), read(XF),nl, write('New Y = '),read(YF),nl,
@@ -151,6 +151,13 @@ defineSpace([H|Rest], X, Y, NewValue, NewBoard):- X > 0, Y2 is Y-1,defineSpace(R
 
 %%%%%%%%%%%%%%%%%%%%% FUNCOES AUXILIARES   %%%%%%%%%%%%%%%%%%%%%%%%%
 
+%checkMate(Board).
+%TODO Incompleto
+checkMate(Board):-whereM(Board,X,Y),(inLine(Board,X,Y,1,Y);inLine(Board,X,Y,11,Y);inLine(Board,X,Y,X,1);inLine(Board,X,Y,X,11)).
+
+%whereM(Board,X,Y).
+
+whereM(Board,X,Y):-between(1,11,Index1),between(1,11,Index2),whatValue(Board,Index1,Index2,Value),Value =:= 5, X is Index1, Y is Index2.
 
 %whatValue(Board,X,Y,Value).
 
