@@ -50,7 +50,8 @@ write('passou2'),
 nl,
 printTable(NewBoard).
 
-menu:- write('Bem Vindo ao BreakThru'),nl,
+menu:- repeat,
+write('Bem Vindo ao BreakThru'),nl,
 nl,
 write('1 - Jogar '),nl,
 write('2 - Creditos '),nl,
