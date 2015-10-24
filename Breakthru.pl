@@ -2,6 +2,7 @@
 
 :-use_module(library(lists)).
 :-use_module(library(between)).
+:-use_module(library(random)).
 
 %%% Jogador Amarelo = 0 %%%
 %%% Jogador Cinzento = 1 %%%
@@ -32,7 +33,7 @@ initial_board(
 	[0,0,0,0,0,0,0,1,0,0,0],
 	[0,0,0,0,0,0,0,0,0,0,0]]).
 
-testing(X,Y,XF,YF):-final_board(Board),getAllPossibleMoves(Board,0,2,X,Y,XF,YF).
+testing(X,Y,XF,YF):-final_board(Board),printTable(Board),getRandomMove(Board,0,2,X,Y,XF,YF).
 	
 init:-
 write('BEM-VINDO AO BREAKTHRU'),
@@ -49,14 +50,31 @@ write('passou2'),
 nl,
 printTable(NewBoard).
 
-menu:- write('Bem Vindo ao BreakThru'),nl,
+%%%% MENUS %%%%
+
+playMenu:-nl,
+nl,
+write('1 - HUM - HUM '),nl,
+write('2 - HUM - PC '),nl,
+write('3 - PC - PC '),nl,
+write('4 - Back '), nl,
+read(Answer), playMenuAnswer(Answer).
+
+
+playMenuAnswer(1):-final_board(Board), playFirst(Board,0,0),!,menu.
+playMenuAnswer(2):-final_board(Board), playFirst(Board,1,0),!,menu.
+playMenuAnswer(3):-final_board(Board), playFirst(Board,1,1),!,menu.
+playMenuAnswer(4):-!,menu.
+playMenuAnswer(_):-write('Wrong Input'),nl,nl,!,playMenu.
+
+menu:- nl, nl, write('Bem Vindo ao BreakThru'),nl,
 nl,
 write('1 - Jogar '),nl,
 write('2 - Creditos '),nl,
 write('3 - Exit '),nl,
 read(Answer), menuAnswer(Answer).
 
-menuAnswer(1):-final_board(Board), playFirst(Board),!,menu.
+menuAnswer(1):-playMenu.
 menuAnswer(2):-credits,!,menu.
 menuAnswer(3):-!.
 menuAnswer(_):-write('Wrong Input'),nl,nl,!,menu.
@@ -112,12 +130,27 @@ findElem(Elem,[X|Rest]):- \+(is_list(X)),findElem(Elem,Rest).
 
 %%%%%%%%%%%%%%%%%% Movimentação de Peças %%%%%%%%%%%%%%%%%%%%%%%%
 
-playFirst(Board):-printTable(Board),play(Board,0).
+%playFirst(Board,Robot,Robot).
 
-play(Board,0):-continueGame(Board), chooseMove(Board,0,NewBoard,2),!,play(NewBoard,1).
-play(Board,1):-continueGame(Board), chooseMove(Board,1,NewBoard,2),!,play(NewBoard,0).
-play(_,0):-write('Jogador Cinzento ganhou!').
-play(_,1):-write('Jogador Amarelo ganhou!').
+playFirst(Board,Bot1,Bot2):-printTable(Board),play(Board,0,Bot1,Bot2).
+
+%play(Board,CurrPlayer,Bot1,Bot2).
+
+%HUM - HUM
+play(Board,0,0,0):-continueGame(Board), chooseMove(Board,0,NewBoard,2),!,play(NewBoard,1,0,0).
+play(Board,1,0,0):-continueGame(Board), chooseMove(Board,1,NewBoard,2),!,play(NewBoard,0,0,0).
+
+%HUM - PC
+play(Board,0,1,0):-continueGame(Board), chooseMove(Board,0,NewBoard,2),!,play(NewBoard,1,1,0).
+play(Board,1,1,0):-continueGame(Board), playRandomMove(Board,1,NewBoard,2),!,play(NewBoard,0,1,0).
+
+%PC - PC
+play(Board,0,1,1):-continueGame(Board), playRandomMove(Board,0,NewBoard,2),!,play(NewBoard,1,1,1).
+play(Board,1,1,1):-continueGame(Board), playRandomMove(Board,1,NewBoard,2),!,play(NewBoard,0,1,1).
+
+
+play(_,0,_,_):-write('Jogador Cinzento ganhou!').
+play(_,1,_,_):-write('Jogador Amarelo ganhou!').
 
 %canUseThisPiece(Board,X,Y,Player,CostLeft,NewCost).
 
@@ -173,16 +206,38 @@ whatValue(Board,X,Y,Value):-X2 is X - 1, Y2 is Y -1, nth0(Y2,Board,List),nth0(X2
 getAllElements([X|_],X).
 getAllElements([_|Rest],Y):-getAllElements(Rest,Y).
 
-%getAllPossibleMoves(Board,Player,X,Y).
+
+
+
+
+%%%%%%%   BOT   %%%%%
+
+%getAllPossibleMoves(Board,Player,CostLeft,X,Y,XF,YF). Generate and Test random movements
 
 getAllPossibleMoves(Board,Player,CostLeft,X,Y,XF,YF):-between(1,11,XIndex),between(1,11,YIndex),between(1,11,XFIndex),between(1,11,YFIndex),
 														canUseThisPiece(Board,XIndex,YIndex,Player,CostLeft,NewCost),
 														validMove(Board,XIndex,YIndex,XFIndex,YFIndex,Player,NewCost,_),
 														X is XIndex,Y is YIndex, XF is XFIndex, YF is YFIndex.
 
+%getRandomMove(Board,Player,CostLeft,X,Y,XF,YF).
+														
+getRandomMove(Board,Player,CostLeft,X,Y,XF,YF,CostToSpend):-repeat,random(1,11,XIndex),random(1,11,YIndex),random(1,11,XFIndex),random(1,11,YFIndex),
+														canUseThisPiece(Board,XIndex,YIndex,Player,CostLeft,NewCost),
+														validMove(Board,XIndex,YIndex,XFIndex,YFIndex,Player,NewCost,CostToSpend),
+														X is XIndex,Y is YIndex, XF is XFIndex, YF is YFIndex.
+%playRandomMove(Board,Player,NewBoard,CostLeft).
 
-%%%%%%%   BOT   %%%%%
+playRandomMove(Board,_,Board,0).	
+playRandomMove(Board,Player,NewBoard,CostLeft):-getRandomMove(Board,Player,CostLeft,X,Y,XF,YF,CostToSpend),movePiece(Board,X,Y,XF,YF,NewBoard2),
+												printTable(NewBoard2),
+												printBotPlay(X,Y,XF,YF),
+												playRandomMove(NewBoard2,Player,NewBoard,CostToSpend).
 
+%printBotPlay(X,Y,XF,YF).
+
+printBotPlay(X,Y,XF,YF):-write('Bot played X:'),write(X),write('|Y:'),write(Y),write(' to XF '), write(XF),write('|YF:'),write(YF),nl.
+												
+												
 %checkMateYellow(Board).
 
 checkMateYellow(Board):-whereM(Board,X,Y),(inLine(Board,X,Y,1,Y);inLine(Board,X,Y,11,Y);inLine(Board,X,Y,X,1);inLine(Board,X,Y,X,11)).
@@ -199,21 +254,10 @@ printTable(Table):-
 	nl,nl,
 	printLines(1,Table),
 	nl.
+	
 printLines(_,[]).
-
-printLines(1,[Lin|Resto]):-
-	write(1), write(' |'),printLine(Lin), write('    W | C | E'),
-	nl,
-	printUnderscores(_),nl,
-	printLines(2,Resto).
 	
-printLines(2,[Lin|Resto]):-
-	write(2), write(' |'),printLine(Lin), write('    SW| S |SE'),
-	nl,
-	printUnderscores(_),nl,
-	printLines(3,Resto).
-	
-printLines(N,[Lin|Resto]):- N < 10,N > 2,
+printLines(N,[Lin|Resto]):- N < 10,
 	write(N), write(' |'),printLine(Lin), nl,
 	printUnderscores(0),nl,
 	N2 is N + 1,
@@ -230,9 +274,9 @@ printLine([El|Resto]):-
 	writePiece(El),
 	printLine(Resto).
 	
-printUnderscores(_):-write('_______________________________________________').
+printUnderscores(_):-write('-----------------------------------------------').
 
-printFirstLine(_):-write('    1   2   3   4   5   6   7   8   9   10  11     NW| N |NE').
+printFirstLine(_):-write('    1   2   3   4   5   6   7   8   9   10  11 ').
 
 writePiece(0):-write(' . |').
 writePiece(1):-write(' D |'). %%%% Defesa %%%%
