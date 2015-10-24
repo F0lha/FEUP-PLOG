@@ -32,7 +32,7 @@ initial_board(
 	[0,0,0,0,0,0,0,1,0,0,0],
 	[0,0,0,0,0,0,0,0,0,0,0]]).
 
-testing:-final_board(Board),checkMateGray(Board).
+testing:-final_board(Board),inLine(Board,7,1,4,1).
 	
 init:-
 write('BEM-VINDO AO BREAKTHRU'),
@@ -67,10 +67,10 @@ credits:-nl, write('Jogo feito por Joao Baiao e Pedro Castro'),nl, nl.
 
 %inLine(Board,X,Y,XF,YF).
 
-inLine(Board,X,Y,XF,YF):-(X =:= XF, YF>=Y,between(Y,YF,Index),whatValue(Board,X,Index,Value),Value =\= 0,fail);
-							(X =:= XF, Y > YF, between(YF,Y,Index),whatValue(Board,X,Index,Value),Value =\= 0,fail);
-							(Y =:= YF,XF>=X, between(X,XF,Index),whatValue(Board,Index,Y,Value),Value =\= 0,fail);
-							(Y =:= YF,X > XF, between(XF,X,Index),whatValue(Board,Index,Y,Value),Value =\= 0,fail).
+inLine(Board,X,Y,XF,YF):-(X =:= XF, YF >= Y,Low is Y + 1,High is YF, between(Low,High,Index),whatValue(Board,X,Index,Value),((Value =\= 0,!,fail);Index =:=High));
+							(X =:= XF, Y > YF,Low is YF,High is Y - 1, between(Low,High,Index),whatValue(Board,X,Index,Value),((Value =\= 0,!,fail);Index =:=High));
+							(Y =:= YF, XF >= X, Low is X + 1,High is XF, between(Low,High,Index),whatValue(Board,Index,Y,Value),((Value =\= 0,!,fail);Index =:=High));
+							(Y =:= YF,X > XF, Low is XF,High is X - 1, between(Low,High,Index),whatValue(Board,Index,Y,Value),((Value =\= 0,!,fail);Index =:=High)).
 												
 %getDiagonals(X,Y,XF,YF).
 												 
@@ -86,10 +86,8 @@ diagonal(X,Y,XF,YF):-XT is X + 1, XB is X - 1,YT is Y + 1, YB is Y - 1,(
 
 %validMove(Board,X,Y,Player).
 
-validMove(Board,X,Y,XF,YF,Player,MoreValue):-(diagonal(X,Y,XF,YF),playerCost(Board,XF,YF,Player2,_), Player2 =\= -1,Player=\=Player2,whatValue(Board,X,Y,Value),((Value=:= 5, MoreValue is 0);(MoreValue is 1)));
-											(inLine(Board,X,Y,XF,YF), MoreValue is 0).
-											
-validMove(_,_,_,_,_,_,-1).
+validMove(Board,X,Y,XF,YF,Player,NewCost,NewestCost):-((diagonal(X,Y,XF,YF),playerCost(Board,XF,YF,Player2,_), Player2 =\= -1,Player=\=Player2,whatValue(Board,X,Y,Value),((Value=:= 5, MoreValue is 0);(MoreValue is 1)));
+											(inLine(Board,X,Y,XF,YF), MoreValue is 0)),checkCost(NewCost,MoreValue,NewestCost).
 
 
 %continueGame(Board).
@@ -123,9 +121,9 @@ play(_,1):-write('Jogador Amarelo ganhou!').
 chooseMove(Board,_,Board,0).
 chooseMove(Board,Player,NewBoard,CostLeft):- write('Que peca deseja mover? Jogador '),((Player =:= 0, write('Amarelo'));(Player =:= 1,write('Cinzento'))),write(' com '),write(CostLeft),write(' Jogadas:')
 										,nl,write('X = '), read(X),nl, write('Y = '), read(Y),nl,
-										playerCost(Board,X,Y,RightPlayer,Diff),checkCost(CostLeft,Diff,NewCost), RightPlayer =:= Player,
+										playerCost(Board,X,Y,RightPlayer,Diff), checkCost(CostLeft,Diff,NewCost),RightPlayer =:= Player,
 										write('New X = '), read(XF),nl, write('New Y = '),read(YF),nl,
-										validMove(Board,X,Y,XF,YF,Player,MoreValue),MoreValue >= 0, checkCost(NewCost,MoreValue,NewestCost),
+										validMove(Board,X,Y,XF,YF,Player,NewCost,NewestCost), 
 										movePiece(Board,X,Y,XF,YF,NewBoard2),
 										printTable(NewBoard2),
 										chooseMove(NewBoard2,Player,NewBoard,NewestCost),!.
@@ -167,6 +165,9 @@ whatValue(Board,X,Y,Value):-X2 is X - 1, Y2 is Y -1, nth0(Y2,Board,List),nth0(X2
 
 getAllElements([X|_],X).
 getAllElements([_|Rest],Y):-getAllElements(Rest,Y).
+
+%getAllPossibleMoves(Board,Player,List).
+
 
 
 %%%%%%%   BOT   %%%%%
