@@ -27,13 +27,12 @@ initial_board(
 	[0,0,0,0,0,0,0,0,0,1,0],
 	[0,0,0,0,0,0,0,0,1,0,2],	
 	[0,1,0,2,0,0,0,2,0,1,0],
-	[0,1,0,0,1,1,2,0,0,0,0],
+	[0,1,0,0,0,1,1,0,0,0,0],
 	[0,0,0,0,0,5,1,0,0,0,0],
 	[0,0,0,0,0,0,0,1,0,0,0],
 	[0,0,0,0,0,0,0,0,0,0,0]]).
 
-	
-testing:-final_board(Board),checkMate(Board).
+testing:-final_board(Board),checkMateGray(Board).
 	
 init:-
 write('BEM-VINDO AO BREAKTHRU'),
@@ -72,14 +71,18 @@ inLine(Board,X,Y,XF,YF):-(X =:= XF, YF>=Y,between(Y,YF,Index),whatValue(Board,X,
 							(X =:= XF, Y > YF, between(YF,Y,Index),whatValue(Board,X,Index,Value),Value =\= 0,fail);
 							(Y =:= YF,XF>=X, between(X,XF,Index),whatValue(Board,Index,Y,Value),Value =\= 0,fail);
 							(Y =:= YF,X > XF, between(XF,X,Index),whatValue(Board,Index,Y,Value),Value =\= 0,fail).
-
+												
+%getDiagonals(X,Y,XF,YF).
+												 
+getDiagonals(X,Y,XF,YF):-bagof(XF,diagonal(X,Y,XF,YF),LX),getAllElements(LX,XF).				
+							
 %diagonal(X,Y,XF,YF).
 
 diagonal(X,Y,XF,YF):-XT is X + 1, XB is X - 1,YT is Y + 1, YB is Y - 1,(
-					(XF =:= XT, YF =:= YT);
-					(XF =:= XB, YF =:= YT);
-					(XF =:= XT, YF =:= YB);
-					(XF =:= XB, YF =:= YB)).
+					(XT < 12,YT < 12, XF is XT, YF is YT);
+					(XB > 0,YT < 12,XF is XB, YF is YT);
+					(XT < 12,YB > 0,XF is XT, YF is YB);
+					(XB > 0,YB > 0,XF is XB, YF is YB)).
 
 %validMove(Board,X,Y,Player).
 
@@ -151,9 +154,6 @@ defineSpace([H|Rest], X, Y, NewValue, NewBoard):- X > 0, Y2 is Y-1,defineSpace(R
 
 %%%%%%%%%%%%%%%%%%%%% FUNCOES AUXILIARES   %%%%%%%%%%%%%%%%%%%%%%%%%
 
-%checkMate(Board).
-%TODO Incompleto
-checkMate(Board):-whereM(Board,X,Y),(inLine(Board,X,Y,1,Y);inLine(Board,X,Y,11,Y);inLine(Board,X,Y,X,1);inLine(Board,X,Y,X,11)).
 
 %whereM(Board,X,Y).
 
@@ -163,6 +163,21 @@ whereM(Board,X,Y):-between(1,11,Index1),between(1,11,Index2),whatValue(Board,Ind
 
 whatValue(Board,X,Y,Value):-X2 is X - 1, Y2 is Y -1, nth0(Y2,Board,List),nth0(X2,List,Value).
 
+%getAllElements(List,Elem).
+
+getAllElements([X|_],X).
+getAllElements([_|Rest],Y):-getAllElements(Rest,Y).
+
+
+%%%%%%%   BOT   %%%%%
+
+%checkMateYellow(Board).
+
+checkMateYellow(Board):-whereM(Board,X,Y),(inLine(Board,X,Y,1,Y);inLine(Board,X,Y,11,Y);inLine(Board,X,Y,X,1);inLine(Board,X,Y,X,11)).
+
+%checkMateGray(Board).
+
+checkMateGray(Board):-whereM(Board,X,Y),getDiagonals(X,Y,XF,YF),whatValue(Board,XF,YF,Value),Value =:= 1.
 
 %%%%%%%%%%%%%%%%%%%%%% COPIADO CARALHO CUIDADO %%%%%%%%%%%%%%%%%%%%%%
 
