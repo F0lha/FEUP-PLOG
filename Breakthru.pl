@@ -195,7 +195,7 @@ getAllElements([_|Rest],Y):-getAllElements(Rest,Y).
 
 %getBestMove(Board,Player,X,Y,YF,CostToSpend).
 
-getBestMove(Board,Player,X,Y,XF,YF,CostLeft,CostToSpend):-listAllPossibleMoves(Board,Player,CostLeft,List),evaluate_and_choose(List,Board,0,(_,-1000),X-Y-XF-YF-CostToSpend).
+getBestMove(Board,Player,X,Y,XF,YF,CostLeft,CostToSpend):-listAllPossibleMoves(Board,Player,CostLeft,L),random_permutation(L,List),evaluate_and_choose(List,Board,0,(_,-1000),X-Y-XF-YF-CostToSpend).
 
 %evaluate_and_choose  Based on the Art of Prolog predicate
 
@@ -321,7 +321,7 @@ checkMateGray(Board,XF,YF,X,Y):-whereM(Board,X,Y),getDiagonals(X,Y,XTemp,YTemp),
 
 %printBoard(Board,X,Y).
 
-printTable(Board,X,Y):- 		nl,
+printTable(Board,X,Y):- 	nl,
 							printFirstLine(_),
 							nl,
 							printLines(Board,X,Y),
