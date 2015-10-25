@@ -62,7 +62,7 @@ read(Answer), playMenuAnswer(Answer).
 
 
 playMenuAnswer(1):-final_board(Board), playFirst(Board,0,0),!,menu.
-playMenuAnswer(2):-final_board(Board), playFirst(Board,1,0),!,menu.
+playMenuAnswer(2):-final_board(Board), playFirst(Board,0,1),!,menu.
 playMenuAnswer(3):-initial_board(Board), playFirst(Board,1,1),!,menu.
 playMenuAnswer(4):-!,menu.
 playMenuAnswer(_):-write('Wrong Input'),nl,nl,!,playMenu.
@@ -113,7 +113,6 @@ validMove(Board,X,Y,XF,YF,Player,NewCost,NewestCost):-((getDiagonals(X,Y,XF,YF),
 %continueGame(Board).
 
 continueGame(Board):- findElem(5,Board), \+(isOnEdge(Board)).
-continueGame(_):- fail.
 
 %isOnEdge(Board).
 
@@ -134,23 +133,21 @@ findElem(Elem,[X|Rest]):- \+(is_list(X)),findElem(Elem,Rest).
 
 playFirst(Board,Bot1,Bot2):-printTable(Board),play(Board,0,Bot1,Bot2).
 
-%play(Board,CurrPlayer,Bot1,Bot2).
+%play(Board,CurrPlayer,Bot1,Bot2). TODO play(Board,CurrPlayer,Bot1,Bot2,Level) TODO choose between player and bot with function FIX corre os dois predicados
 
-%HUM - HUM
-play(Board,0,0,0):-continueGame(Board), chooseMove(Board,0,NewBoard,2),!,play(NewBoard,1,0,0).
-play(Board,1,0,0):-continueGame(Board), chooseMove(Board,1,NewBoard,2),!,play(NewBoard,0,0,0).
-
-%HUM - PC
-play(Board,0,1,0):-continueGame(Board), chooseMove(Board,0,NewBoard,2),!,play(NewBoard,1,1,0).
-play(Board,1,1,0):-continueGame(Board), playRandomMoveWithEnd(Board,1,NewBoard,2),!,play(NewBoard,0,1,0).
-
-%PC - PC
-play(Board,0,1,1):-continueGame(Board), playRandomMoveWithEnd(Board,0,NewBoard,2),!,play(NewBoard,1,1,1).
-play(Board,1,1,1):-continueGame(Board), playRandomMoveWithEnd(Board,1,NewBoard,2),!,play(NewBoard,0,1,1).
+play(Board,0,Bot1,Bot2):-continueGame(Board), whoPlays(Board,0,NewBoard,Bot1,Bot2,_),!,play(NewBoard,1,Bot1,Bot2).
+play(Board,1,Bot1,Bot2):-continueGame(Board), whoPlays(Board,1,NewBoard,Bot1,Bot2,_),!,play(NewBoard,0,Bot1,Bot2).
 
 
 play(_,0,_,_):-write('Jogador Cinzento ganhou!').
 play(_,1,_,_):-write('Jogador Amarelo ganhou!').
+
+%whoPlays(Board,Player,NewBoard,Bot1,Bot2,Level). TODO LEVEL
+
+whoPlays(Board,0,NewBoard,0,_,_):-chooseMove(Board,0,NewBoard,2).
+whoPlays(Board,1,NewBoard,_,0,_):-chooseMove(Board,1,NewBoard,2).
+whoPlays(Board,0,NewBoard,1,_,_):-playRandomMoveWithEnd(Board,0,NewBoard,2).
+whoPlays(Board,1,NewBoard,_,1,_):-playRandomMoveWithEnd(Board,1,NewBoard,2).
 
 %canUseThisPiece(Board,X,Y,Player,CostLeft,NewCost).
 
@@ -229,8 +226,8 @@ getRandomMove(Board,Player,CostLeft,X,Y,XF,YF,CostToSpend):-repeat,random(1,11,X
 
 playRandomMove(Board,_,Board,0).	
 playRandomMove(Board,Player,NewBoard,CostLeft):-getRandomMove(Board,Player,CostLeft,X,Y,XF,YF,CostToSpend),movePiece(Board,X,Y,XF,YF,NewBoard2),
+												printBotPlay(Player,X,Y,XF,YF),nl,
 												printTable(NewBoard2),
-												printBotPlay(Player, X,Y,XF,YF),
 												playRandomMove(NewBoard2,Player,NewBoard,CostToSpend).
 
 %printBotPlay(Player, X,Y,XF,YF).
@@ -243,13 +240,13 @@ printBotPlay(1,X,Y,XF,YF):-write('Gray Bot played X:'),write(X),write('|Y:'),wri
 playRandomMoveWithEnd(Board,_,Board,0).
 
 playRandomMoveWithEnd(Board,0,NewBoard,2):-checkMateYellow(Board,X,Y,XF,YF),movePiece(Board,X,Y,XF,YF,NewBoard2),
+													printBotPlay(0,X,Y,XF,YF), write(' - Ended with CheckMate function'), nl,
 													printTable(NewBoard2),
-													printBotPlay(0, X,Y,XF,YF), write(' - Ended with CheckMate function'), nl,
 													playRandomMoveWithEnd(NewBoard2,_,NewBoard,0).
 													
 playRandomMoveWithEnd(Board,1,NewBoard,2):-checkMateGray(Board,X,Y,XF,YF),movePiece(Board,X,Y,XF,YF,NewBoard2),
+													printBotPlay(1,X,Y,XF,YF), write(' - Ended with CheckMate function'),nl,
 													printTable(NewBoard2),
-													printBotPlay(1, X,Y,XF,YF), write(' - Ended with CheckMate function'),nl,
 													playRandomMoveWithEnd(NewBoard2,_,NewBoard,0).
 
 playRandomMoveWithEnd(Board,Player,NewBoard,CostLeft):-playRandomMove(Board,Player,NewBoard,CostLeft).
@@ -261,7 +258,7 @@ checkMateYellow(Board,X,Y,XF,YF):-whereM(Board,X,Y),((inLine(Board,X,Y,1,Y),XF i
 
 %checkMateGray(Board).
 
-checkMateGray(Board,X,Y,XF,YF):-whereM(Board,X,Y),getDiagonals(X,Y,XTemp,YTemp),whatValue(Board,XTemp,YTemp,Value),Value =:= 1,XF is XTemp,YF is YTemp.
+checkMateGray(Board,XF,YF,X,Y):-whereM(Board,X,Y),getDiagonals(X,Y,XTemp,YTemp),whatValue(Board,XTemp,YTemp,Value),Value =:= 1,XF is XTemp,YF is YTemp.
 
 %%%%%%%%%%%%%%%%%%%%%% COPIADO CARALHO CUIDADO %%%%%%%%%%%%%%%%%%%%%%
 
@@ -276,14 +273,14 @@ printLines(_,[]).
 	
 printLines(N,[Lin|Resto]):- N < 10,
 	write(N), write(' |'),printLine(Lin), nl,
-	printUnderscores(0),nl,
+	printUnderscores(N),nl,
 	N2 is N + 1,
 	printLines(N2,Resto).
 	
 printLines(N,[Lin|Resto]):- N >= 10,
 	write(N), write('|'),printLine(Lin), nl,
 	N2 is N + 1,
-	printUnderscores(0),nl,
+	printUnderscores(N),nl,
 	printLines(N2,Resto).
 
 printLine([]).
@@ -291,6 +288,7 @@ printLine([El|Resto]):-
 	writePiece(El),
 	printLine(Resto).
 	
+
 printUnderscores(_):-write('-----------------------------------------------').
 
 printFirstLine(_):-write('    1   2   3   4   5   6   7   8   9   10  11 ').
