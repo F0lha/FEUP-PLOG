@@ -33,7 +33,7 @@ initial_board(
 	[0,0,0,0,0,0,0,1,0,0,0],
 	[0,0,0,0,0,0,0,0,0,0,0]]).
 
-testing(X,Y,XF,YF):-final_board(Board),printTable(Board,0,0),getRandomMove(Board,0,2,X,Y,XF,YF).
+testing(X,Y,XF,YF,CostLeft):-final_board(Board),listAllPossibleMoves(Board,0,2,[X-Y-XF-YF-CostLeft|_]).
 	
 init:-
 write('BEM-VINDO AO BREAKTHRU'),
@@ -206,19 +206,27 @@ getAllElements([_|Rest],Y):-getAllElements(Rest,Y).
 
 %%%%%%%   BOT   %%%%%
 
-%getAllPossibleMoves(Board,Player,CostLeft,X,Y,XF,YF). Generate and Test random movements
+%listAllPossibleMoves(Board,Player,CostLeft,X,Y,XF,YF,CostToSpend,List).
 
-getAllPossibleMoves(Board,Player,CostLeft,X,Y,XF,YF):-between(1,11,XIndex),between(1,11,YIndex),between(1,11,XFIndex),between(1,11,YFIndex),
-														canUseThisPiece(Board,XIndex,YIndex,Player,CostLeft,NewCost),
-														validMove(Board,XIndex,YIndex,XFIndex,YFIndex,Player,NewCost,_),
-														X is XIndex,Y is YIndex, XF is XFIndex, YF is YFIndex.
+listAllPossibleMoves(Board,Player,CostLeft,List):-findall(X-Y-XF-YF-CostToSpend,allPossibleMoves(Board,Player,CostLeft,X,Y,XF,YF,CostToSpend),List).
 
-%getRandomMove(Board,Player,CostLeft,X,Y,XF,YF).
+
+%testMoves(Board,Player,CostLeft,XIndex,YIndex,XFIndex,YFIndex,CostToSpend). Tests if the Move can be done
+
+testMoves(Board,Player,CostLeft,XIndex,YIndex,XFIndex,YFIndex,CostToSpend):-	canUseThisPiece(Board,XIndex,YIndex,Player,CostLeft,NewCost),
+																				validMove(Board,XIndex,YIndex,XFIndex,YFIndex,Player,NewCost,CostToSpend).														
+
+%allPossibleMoves(Board,Player,CostLeft,X,Y,XF,YF). Generate and Test random movements																			
+																				
+allPossibleMoves(Board,Player,CostLeft,X,Y,XF,YF,CostToSpend):-	between(1,11,XIndex),between(1,11,YIndex),between(1,11,XFIndex),between(1,11,YFIndex),
+																	testMoves(Board,Player,CostLeft,XIndex,YIndex,XFIndex,YFIndex,CostToSpend),
+																	X is XIndex,Y is YIndex, XF is XFIndex, YF is YFIndex.
+
+%getRandomMove(Board,Player,CostLeft,X,Y,XF,YF,CostToSpend).
+
+getRandomMove(Board,Player,CostLeft,X,Y,XF,YF,CostToSpend):-listAllPossibleMoves(Board,Player,CostLeft,List),random_member(X-Y-XF-YF-CostToSpend,List).
 														
-getRandomMove(Board,Player,CostLeft,X,Y,XF,YF,CostToSpend):-repeat,random(1,11,XIndex),random(1,11,YIndex),random(1,11,XFIndex),random(1,11,YFIndex),
-														canUseThisPiece(Board,XIndex,YIndex,Player,CostLeft,NewCost),
-														validMove(Board,XIndex,YIndex,XFIndex,YFIndex,Player,NewCost,CostToSpend),
-														X is XIndex,Y is YIndex, XF is XFIndex, YF is YFIndex.
+
 %playRandomMove(Board,Player,NewBoard,CostLeft).
 
 playRandomMove(Board,_,Board,0).	
