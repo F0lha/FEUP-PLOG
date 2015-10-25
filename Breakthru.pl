@@ -33,14 +33,14 @@ initial_board(
 	[0,0,0,0,0,0,0,1,0,0,0],
 	[0,0,0,0,0,0,0,0,0,0,0]]).
 
-testing(X,Y,XF,YF):-final_board(Board),printTable(Board),getRandomMove(Board,0,2,X,Y,XF,YF).
+testing(X,Y,XF,YF):-final_board(Board),printTable(Board,0,0),getRandomMove(Board,0,2,X,Y,XF,YF).
 	
 init:-
 write('BEM-VINDO AO BREAKTHRU'),
 final_board(Board), %%% Declare Board as the Board Variable
 nl,
 nl,
-printTable(Board),
+printTable(Board,0,0),
 nl,
 write('passou1'),
 nl,
@@ -48,7 +48,7 @@ chooseMov(Board,0,NewBoard),
 nl,
 write('passou2'),
 nl,
-printTable(NewBoard).
+printTable(NewBoard,0,0).
 
 %%%% MENUS %%%%
 
@@ -131,9 +131,9 @@ findElem(Elem,[X|Rest]):- \+(is_list(X)),findElem(Elem,Rest).
 
 %playFirst(Board,Robot,Robot).
 
-playFirst(Board,Bot1,Bot2):-printTable(Board),play(Board,0,Bot1,Bot2).
+playFirst(Board,Bot1,Bot2):-printTable(Board,0,0),play(Board,0,Bot1,Bot2).
 
-%play(Board,CurrPlayer,Bot1,Bot2). TODO play(Board,CurrPlayer,Bot1,Bot2,Level) TODO choose between player and bot with function FIX corre os dois predicados
+%play(Board,CurrPlayer,Bot1,Bot2). TODO play(Board,CurrPlayer,Bot1,Bot2,Level) TODO Level
 
 play(Board,0,Bot1,Bot2):-continueGame(Board), whoPlays(Board,0,NewBoard,Bot1,Bot2,_),!,play(NewBoard,1,Bot1,Bot2).
 play(Board,1,Bot1,Bot2):-continueGame(Board), whoPlays(Board,1,NewBoard,Bot1,Bot2,_),!,play(NewBoard,0,Bot1,Bot2).
@@ -162,7 +162,7 @@ chooseMove(Board,Player,NewBoard,CostLeft):- write('Que peca deseja mover? Jogad
 										write('New X = '), read(XF),nl, write('New Y = '),read(YF),nl,
 										validMove(Board,X,Y,XF,YF,Player,NewCost,NewestCost), 
 										movePiece(Board,X,Y,XF,YF,NewBoard2),
-										printTable(NewBoard2),
+										printTable(NewBoard2,XF,YF),
 										chooseMove(NewBoard2,Player,NewBoard,NewestCost),!.
 										
 chooseMove(Board,Player,NewBoard,CostLeft):-write('Jogada Impossivel'),nl,nl,chooseMove(Board,Player,NewBoard,CostLeft),!.
@@ -204,9 +204,6 @@ getAllElements([X|_],X).
 getAllElements([_|Rest],Y):-getAllElements(Rest,Y).
 
 
-
-
-
 %%%%%%%   BOT   %%%%%
 
 %getAllPossibleMoves(Board,Player,CostLeft,X,Y,XF,YF). Generate and Test random movements
@@ -227,7 +224,7 @@ getRandomMove(Board,Player,CostLeft,X,Y,XF,YF,CostToSpend):-repeat,random(1,11,X
 playRandomMove(Board,_,Board,0).	
 playRandomMove(Board,Player,NewBoard,CostLeft):-getRandomMove(Board,Player,CostLeft,X,Y,XF,YF,CostToSpend),movePiece(Board,X,Y,XF,YF,NewBoard2),
 												printBotPlay(Player,X,Y,XF,YF),nl,
-												printTable(NewBoard2),
+												printTable(NewBoard2,XF,YF),
 												playRandomMove(NewBoard2,Player,NewBoard,CostToSpend).
 
 %printBotPlay(Player, X,Y,XF,YF).
@@ -241,12 +238,12 @@ playRandomMoveWithEnd(Board,_,Board,0).
 
 playRandomMoveWithEnd(Board,0,NewBoard,2):-checkMateYellow(Board,X,Y,XF,YF),movePiece(Board,X,Y,XF,YF,NewBoard2),
 													printBotPlay(0,X,Y,XF,YF), write(' - Ended with CheckMate function'), nl,
-													printTable(NewBoard2),
+													printTable(NewBoard2,XF,YF),
 													playRandomMoveWithEnd(NewBoard2,_,NewBoard,0).
 													
 playRandomMoveWithEnd(Board,1,NewBoard,2):-checkMateGray(Board,X,Y,XF,YF),movePiece(Board,X,Y,XF,YF,NewBoard2),
 													printBotPlay(1,X,Y,XF,YF), write(' - Ended with CheckMate function'),nl,
-													printTable(NewBoard2),
+													printTable(NewBoard2,XF,YF),
 													playRandomMoveWithEnd(NewBoard2,_,NewBoard,0).
 
 playRandomMoveWithEnd(Board,Player,NewBoard,CostLeft):-playRandomMove(Board,Player,NewBoard,CostLeft).
@@ -260,42 +257,40 @@ checkMateYellow(Board,X,Y,XF,YF):-whereM(Board,X,Y),((inLine(Board,X,Y,1,Y),XF i
 
 checkMateGray(Board,XF,YF,X,Y):-whereM(Board,X,Y),getDiagonals(X,Y,XTemp,YTemp),whatValue(Board,XTemp,YTemp,Value),Value =:= 1,XF is XTemp,YF is YTemp.
 
-%%%%%%%%%%%%%%%%%%%%%% COPIADO CARALHO CUIDADO %%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%% Printing  %%%%%%%%%%%%%%%%%%%%%%
 
-printTable(Table):-
-	nl,
-	printFirstLine(_),
-	nl,nl,
-	printLines(1,Table),
-	nl.
-	
-printLines(_,[]).
-	
-printLines(N,[Lin|Resto]):- N < 10,
-	write(N), write(' |'),printLine(Lin), nl,
-	printUnderscores(N),nl,
-	N2 is N + 1,
-	printLines(N2,Resto).
-	
-printLines(N,[Lin|Resto]):- N >= 10,
-	write(N), write('|'),printLine(Lin), nl,
-	N2 is N + 1,
-	printUnderscores(N),nl,
-	printLines(N2,Resto).
 
-printLine([]).
-printLine([El|Resto]):-
-	writePiece(El),
-	printLine(Resto).
-	
+%printBoard(Board,X,Y).
 
-printUnderscores(_):-write('-----------------------------------------------').
+printTable(Board,X,Y):- 		nl,
+							printFirstLine(_),
+							nl,
+							printLines(Board,X,Y),
+							nl,nl.
+							
+printLines(Board,X,Y):-between(1,11,YIndex),nl, write(YIndex),((YIndex < 10, write(' |'));(YIndex >= 10,write('|'))), printRestLine(Board,YIndex,X,Y).
+
+printRestLine(Board,YIndex,X,Y):-	between(1,11,XIndex), whatValue(Board,XIndex,YIndex,Value),
+									((XIndex=:=X,YIndex=:=Y,writePiece(Value,1));( \+ (XIndex=:=X,YIndex=:=Y),writePiece(Value,0))), XIndex =:= 11,nl,printDivison(_), YIndex =:= 11.
+
+
+
+printDivison(_):-write('-----------------------------------------------').
 
 printFirstLine(_):-write('    1   2   3   4   5   6   7   8   9   10  11 ').
 
-writePiece(0):-write(' . |').
-writePiece(1):-write(' D |'). %%%% Defesa %%%%
-writePiece(2):-write(' A |'). %%%% Ataque %%%%
-writePiece(5):-write(' M |'). %%%% Objetivo %%%%
+writePiece(0,0):-write(' . |').
+writePiece(1,0):-write(' D |'). %%%% Defesa %%%%
+writePiece(2,0):-write(' A |'). %%%% Ataque %%%%
+writePiece(5,0):-write(' M |'). %%%% Objetivo %%%%
+writePiece(1,1):-write('(D)|'). %%%% Defesa %%%%
+writePiece(2,1):-write('(A)|'). %%%% Ataque %%%%
+writePiece(5,1):-write('(M)|'). %%%% Objetivo %%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+	
