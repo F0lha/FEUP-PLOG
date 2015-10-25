@@ -63,7 +63,7 @@ read(Answer), playMenuAnswer(Answer).
 
 playMenuAnswer(1):-final_board(Board), playFirst(Board,0,0),!,menu.
 playMenuAnswer(2):-final_board(Board), playFirst(Board,1,0),!,menu.
-playMenuAnswer(3):-final_board(Board), playFirst(Board,1,1),!,menu.
+playMenuAnswer(3):-initial_board(Board), playFirst(Board,1,1),!,menu.
 playMenuAnswer(4):-!,menu.
 playMenuAnswer(_):-write('Wrong Input'),nl,nl,!,playMenu.
 
