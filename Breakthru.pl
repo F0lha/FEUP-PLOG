@@ -25,15 +25,15 @@ initial_board(
 	[0,0,0,1,0,0,0,0,0,0,0],
 	[0,1,2,0,0,2,0,0,0,1,0],
 	[0,0,1,0,0,0,0,0,1,0,0],	
-	[0,0,0,0,0,0,0,0,0,1,0],
+	[2,0,0,0,0,0,0,0,0,1,0],
 	[0,0,0,0,0,0,0,0,1,0,2],	
-	[0,1,0,2,0,0,0,2,0,1,0],
-	[0,1,0,0,0,1,1,0,0,0,0],
-	[0,0,0,0,0,5,1,0,0,0,0],
+	[0,1,0,2,0,0,5,2,0,1,0],
+	[0,1,0,0,0,0,1,0,0,0,0],
+	[0,0,0,0,0,0,1,0,0,0,0],
 	[0,0,0,0,0,0,0,1,0,0,0],
 	[0,0,0,0,0,0,0,0,0,0,0]]).
 
-testing(X,Y,XF,YF,CostLeft):-final_board(Board),listAllPossibleMoves(Board,0,2,[X-Y-XF-YF-CostLeft|_]).
+testing(Value):-initial_board(Board),getNShips(Board,0,Value).
 	
 init:-
 write('BEM-VINDO AO BREAKTHRU'),
@@ -204,7 +204,32 @@ getAllElements([X|_],X).
 getAllElements([_|Rest],Y):-getAllElements(Rest,Y).
 
 
-%%%%%%%   BOT   %%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%   BOT   %%%%%%%%%%%%%%%%%%%%%%%%
+
+%evaluateBoard(Board,Player,Value).
+
+evaluateBoard(Board,0,Value):-checkMateYellow(Board,_,_,_,_),Value is 99999.
+evaluateBoard(Board,0,Value):-checkMateGray(Board,_,_,_,_),Value is -99999.
+evaluateBoard(Board,1,Value):-checkMateYellow(Board,_,_,_,_),Value is -99999.
+evaluateBoard(Board,1,Value):-checkMateGray(Board,_,_,_,_),Value is 99999.
+evaluateBoard(Board,0,Value):-motherShipPositionValue(Board,Value).
+evaluateBoard(Board,0,Value):-motherShipPositionValue(Board,-Value).
+
+%getNShips(Board,Player,N).
+
+getNShips(Board,Player,N):-getNShipsRecursive(Board,Player,1,1,0,N).
+
+%getNShipsRecursive(Board,Player,X,Y,NCurr,NProx). Obligatory to be called with X and Y at 1.
+
+getNShipsRecursive(_,_,11,12,N,N).
+
+getNShipsRecursive(Board,Player,X,12,NCurr,NProx):-X1 is X + 1, getNShips(Board,Player,X1,1,NCurr,NProx).
+
+getNShipsRecursive(Board,Player,X,Y,NCurr,NProx):-whatValue(Board,X,Y,Value),((Player =:= 0, Value=:=2 ,N2 is NCurr+1);(Player =:= 1, Value =:= 1,N2 is NCurr+1);N2 is NCurr),Y2 is Y + 1,getNShips(Board,Player,X,Y2,N2,NProx).
+
+%motherShipPositionValue(Value).
+
+motherShipPositionValue(Board,Value):-whereM(Board,X,Y), Value is sqrt((((X - 1) mod 5)*((X - 1) mod 5)) + (((Y - 1) mod 5)*((Y - 1) mod 5))).
 
 %listAllPossibleMoves(Board,Player,CostLeft,X,Y,XF,YF,CostToSpend,List).
 
