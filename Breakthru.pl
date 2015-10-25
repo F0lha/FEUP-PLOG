@@ -33,7 +33,7 @@ initial_board(
 	[0,0,0,0,0,0,0,1,0,0,0],
 	[0,0,0,0,0,0,0,0,0,0,0]]).
 
-testing(Value):-initial_board(Board),getNShips(Board,0,Value).
+testing(Player,V):-final_board(Board),evaluateBoard(Board,Player,V).
 	
 init:-
 write('BEM-VINDO AO BREAKTHRU'),
@@ -212,8 +212,8 @@ evaluateBoard(Board,0,Value):-checkMateYellow(Board,_,_,_,_),Value is 99999.
 evaluateBoard(Board,0,Value):-checkMateGray(Board,_,_,_,_),Value is -99999.
 evaluateBoard(Board,1,Value):-checkMateYellow(Board,_,_,_,_),Value is -99999.
 evaluateBoard(Board,1,Value):-checkMateGray(Board,_,_,_,_),Value is 99999.
-evaluateBoard(Board,0,Value):-motherShipPositionValue(Board,Value).
-evaluateBoard(Board,0,Value):-motherShipPositionValue(Board,-Value).
+evaluateBoard(Board,0,Value):-motherShipPositionValue(Board,MValue),getNShips(Board,0,N),Value is (MValue+N).
+evaluateBoard(Board,1,Value):-motherShipPositionValue(Board,(MValue)),getNShips(Board,1,N),Value is (-MValue+N).
 
 %getNShips(Board,Player,N).
 
@@ -234,7 +234,6 @@ motherShipPositionValue(Board,Value):-whereM(Board,X,Y), Value is sqrt((((X - 1)
 %listAllPossibleMoves(Board,Player,CostLeft,X,Y,XF,YF,CostToSpend,List).
 
 listAllPossibleMoves(Board,Player,CostLeft,List):-findall(X-Y-XF-YF-CostToSpend,allPossibleMoves(Board,Player,CostLeft,X,Y,XF,YF,CostToSpend),List).
-
 
 %testMoves(Board,Player,CostLeft,XIndex,YIndex,XFIndex,YFIndex,CostToSpend). Tests if the Move can be done
 
