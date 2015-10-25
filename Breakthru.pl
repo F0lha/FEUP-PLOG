@@ -21,34 +21,21 @@ initial_board(
 	[0,0,0,0,0,0,0,0,0,0,0]]).
 	
 	final_board(
-	[[0,0,0,0,1,0,2,0,0,0,0],
-	[0,0,0,1,0,0,0,0,0,0,0],
+	[[2,0,0,0,1,0,2,0,0,0,0],
+	[0,0,0,1,0,0,5,0,0,0,0],
 	[0,1,2,0,0,2,0,0,0,1,0],
 	[0,0,1,0,0,0,0,0,1,0,0],	
-	[2,0,0,0,0,0,0,0,0,1,0],
+	[0,0,0,0,0,0,0,0,0,1,0],
 	[0,0,0,0,0,0,0,0,1,0,2],	
-	[0,1,0,2,0,0,5,2,0,1,0],
+	[0,1,0,2,0,0,0,2,0,1,0],
 	[0,1,0,0,0,0,1,0,0,0,0],
 	[0,0,0,0,0,0,1,0,0,0,0],
 	[0,0,0,0,0,0,0,1,0,0,0],
 	[0,0,0,0,0,0,0,0,0,0,0]]).
 
-testing(Player,V):-final_board(Board),evaluateBoard(Board,Player,V).
+testing(X,Y,XF,YF):-final_board(Board),listAllPossibleMoves(Board,0,2,List),evaluate_and_choose(List,Board,0,(_,-1000),X-Y-XF-YF-_).
 	
-init:-
-write('BEM-VINDO AO BREAKTHRU'),
-final_board(Board), %%% Declare Board as the Board Variable
-nl,
-nl,
-printTable(Board,0,0),
-nl,
-write('passou1'),
-nl,
-chooseMov(Board,0,NewBoard),
-nl,
-write('passou2'),
-nl,
-printTable(NewBoard,0,0).
+%testing(Value):-final_board(Board),evaluateBoard(Board,0,Value).
 
 %%%% MENUS %%%%
 
@@ -61,13 +48,13 @@ write('4 - Back '), nl,
 read(Answer), playMenuAnswer(Answer).
 
 
-playMenuAnswer(1):-final_board(Board), playFirst(Board,0,0),!,menu.
-playMenuAnswer(2):-final_board(Board), playFirst(Board,0,1),!,menu.
+playMenuAnswer(1):-initial_board(Board), playFirst(Board,0,0),!,menu.
+playMenuAnswer(2):-initial_board(Board), playFirst(Board,0,1),!,menu.
 playMenuAnswer(3):-initial_board(Board), playFirst(Board,1,1),!,menu.
 playMenuAnswer(4):-!,menu.
 playMenuAnswer(_):-write('Wrong Input'),nl,nl,!,playMenu.
 
-menu:- nl, nl, write('Bem Vindo ao BreakThru'),nl,
+menu:- nl, write('Bem Vindo ao BreakThru'),nl,
 nl,
 write('1 - Jogar '),nl,
 write('2 - Creditos '),nl,
@@ -146,8 +133,8 @@ play(_,1,_,_):-write('Jogador Amarelo ganhou!').
 
 whoPlays(Board,0,NewBoard,0,_,_):-chooseMove(Board,0,NewBoard,2).
 whoPlays(Board,1,NewBoard,_,0,_):-chooseMove(Board,1,NewBoard,2).
-whoPlays(Board,0,NewBoard,1,_,_):-playRandomMoveWithEnd(Board,0,NewBoard,2).
-whoPlays(Board,1,NewBoard,_,1,_):-playRandomMoveWithEnd(Board,1,NewBoard,2).
+whoPlays(Board,0,NewBoard,1,_,_):-playBestMove(Board,0,NewBoard,2).
+whoPlays(Board,1,NewBoard,_,1,_):-playBestMove(Board,1,NewBoard,2).
 
 %canUseThisPiece(Board,X,Y,Player,CostLeft,NewCost).
 
@@ -206,14 +193,37 @@ getAllElements([_|Rest],Y):-getAllElements(Rest,Y).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%   BOT   %%%%%%%%%%%%%%%%%%%%%%%%
 
+%getBestMove(Board,Player,X,Y,YF,CostToSpend).
+
+getBestMove(Board,Player,X,Y,XF,YF,CostLeft,CostToSpend):-listAllPossibleMoves(Board,Player,CostLeft,List),evaluate_and_choose(List,Board,0,(_,-1000),X-Y-XF-YF-CostToSpend).
+
+%evaluate_and_choose  Based on the Art of Prolog predicate
+
+evaluate_and_choose([],_,_,(Move,_),Move).
+
+evaluate_and_choose([X-Y-XF-YF-CostToSpend | ListMoves] ,Board, Player ,Record, BestMove):-
+				movePiece(Board,X,Y,XF,YF,NewBoard),
+				evaluateBoard(NewBoard,Player,Value),
+				updateBestMove(X-Y-XF-YF-CostToSpend, Value, Record, Record1),
+				evaluate_and_choose(ListMoves,Board,Player,Record1,BestMove).
+
+
+updateBestMove(_,Value,(Move1,Value1),(Move1,Value1)):- Value =< Value1.
+updateBestMove(Move,Value,(_,Value1),(Move,Value)):- Value > Value1.
+
+
 %evaluateBoard(Board,Player,Value).
 
-evaluateBoard(Board,0,Value):-checkMateYellow(Board,_,_,_,_),Value is 99999.
-evaluateBoard(Board,0,Value):-checkMateGray(Board,_,_,_,_),Value is -99999.
-evaluateBoard(Board,1,Value):-checkMateYellow(Board,_,_,_,_),Value is -99999.
-evaluateBoard(Board,1,Value):-checkMateGray(Board,_,_,_,_),Value is 99999.
-evaluateBoard(Board,0,Value):-motherShipPositionValue(Board,MValue),getNShips(Board,0,N),Value is (MValue+N).
-evaluateBoard(Board,1,Value):-motherShipPositionValue(Board,(MValue)),getNShips(Board,1,N),Value is (-MValue+N).
+
+evaluateBoard(Board,_,Value):- \+(continueGame(Board)),Value is 2000.
+evaluateBoard(Board,0,Value):-checkMateYellow(Board,_,_,_,_),Value is 1000.
+evaluateBoard(Board,0,Value):-checkMateGray(Board,_,_,_,_),Value is -1000.
+evaluateBoard(Board,1,Value):-checkMateYellow(Board,_,_,_,_),Value is -1000.
+evaluateBoard(Board,1,Value):-checkMateGray(Board,_,_,_,_),Value is 1000.
+evaluateBoard(Board,0,Value):-	motherShipPositionValue(Board,MValue),getNShips(Board,0,NPlayer),
+								getNShips(Board,1,NPlayer1),Value is (MValue+NPlayer-NPlayer1).
+evaluateBoard(Board,1,Value):-	motherShipPositionValue(Board,(MValue)),getNShips(Board,1,NPlayer),
+								getNShips(Board,0,NPlayer1),Value is (-MValue+NPlayer-NPlayer1).
 
 %getNShips(Board,Player,N).
 
@@ -223,9 +233,13 @@ getNShips(Board,Player,N):-getNShipsRecursive(Board,Player,1,1,0,N).
 
 getNShipsRecursive(_,_,11,12,N,N).
 
-getNShipsRecursive(Board,Player,X,12,NCurr,NProx):-X1 is X + 1, getNShips(Board,Player,X1,1,NCurr,NProx).
+getNShipsRecursive(Board,Player,X,12,NCurr,NProx):-X1 is X + 1, getNShipsRecursive(Board,Player,X1,1,NCurr,NProx).
 
-getNShipsRecursive(Board,Player,X,Y,NCurr,NProx):-whatValue(Board,X,Y,Value),((Player =:= 0, Value=:=2 ,N2 is NCurr+1);(Player =:= 1, Value =:= 1,N2 is NCurr+1);N2 is NCurr),Y2 is Y + 1,getNShips(Board,Player,X,Y2,N2,NProx).
+getNShipsRecursive(Board,0,X,Y,NCurr,NProx):-whatValue(Board,X,Y,Value), Value=:=2 ,N2 is NCurr+1,Y2 is Y + 1,getNShipsRecursive(Board,0,X,Y2,N2,NProx).
+
+getNShipsRecursive(Board,1,X,Y,NCurr,NProx):-whatValue(Board,X,Y,Value), Value=:=1 ,N2 is NCurr+1,Y2 is Y + 1,getNShipsRecursive(Board,1,X,Y2,N2,NProx).
+
+getNShipsRecursive(Board,Player,X,Y,NCurr,NProx):-whatValue(Board,X,Y,Value),Y2 is Y + 1,((Player =:= 0, Value =\= 2);(Player =:= 1, Value =\= 1)),getNShipsRecursive(Board,Player,X,Y2,NCurr,NProx).
 
 %motherShipPositionValue(Value).
 
@@ -264,6 +278,11 @@ playRandomMove(Board,Player,NewBoard,CostLeft):-getRandomMove(Board,Player,CostL
 printBotPlay(0,X,Y,XF,YF):-write('Yellow Bot played X:'),write(X),write('|Y:'),write(Y),write(' to XF '), write(XF),write('|YF:'),write(YF).
 printBotPlay(1,X,Y,XF,YF):-write('Gray Bot played X:'),write(X),write('|Y:'),write(Y),write(' to XF '), write(XF),write('|YF:'),write(YF).
 
+%printBestBotPlay(Player, X,Y,XF,YF)
+
+printBestBotPlay(0,X,Y,XF,YF):-write('Yellow Bot played X:'),write(X),write('|Y:'),write(Y),write(' to XF '), write(XF),write('|YF:'),write(YF).
+printBestBotPlay(1,X,Y,XF,YF):-write('Gray Bot played X:'),write(X),write('|Y:'),write(Y),write(' to XF '), write(XF),write('|YF:'),write(YF).
+
 %playRandomMoveWithEnd(Board,Player,NewBoard,CostLeft). A little smarter Bot that ends whenever there is the opportunity or else it plays randomly.
 
 playRandomMoveWithEnd(Board,_,Board,0).
@@ -280,7 +299,15 @@ playRandomMoveWithEnd(Board,1,NewBoard,2):-checkMateGray(Board,X,Y,XF,YF),movePi
 
 playRandomMoveWithEnd(Board,Player,NewBoard,CostLeft):-playRandomMove(Board,Player,NewBoard,CostLeft).
 	
-												
+%playBestMove(Board,Player,NewBoard,CostLeft).	
+	
+playBestMove(Board,_,Board,0).
+	
+playBestMove(Board,Player,NewBoard,CostLeft):-	getBestMove(Board,Player,X,Y,XF,YF,CostLeft,CostToSpend),movePiece(Board,X,Y,XF,YF,NewBoard2),
+												printBestBotPlay(Player,X,Y,XF,YF),nl,
+												printTable(NewBoard2,XF,YF),
+												playBestMove(NewBoard2,Player,NewBoard,CostToSpend).
+	
 %checkMateYellow(Board).
 
 checkMateYellow(Board,X,Y,XF,YF):-whereM(Board,X,Y),((inLine(Board,X,Y,1,Y),XF is 1, YF is Y);(inLine(Board,X,Y,11,Y),XF is 11, YF is Y);(inLine(Board,X,Y,X,1),XF is X, YF is 1);(inLine(Board,X,Y,X,11),XF is X, YF is 11)).
