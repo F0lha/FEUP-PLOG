@@ -142,11 +142,11 @@ play(Board,1,0,0):-continueGame(Board), chooseMove(Board,1,NewBoard,2),!,play(Ne
 
 %HUM - PC
 play(Board,0,1,0):-continueGame(Board), chooseMove(Board,0,NewBoard,2),!,play(NewBoard,1,1,0).
-play(Board,1,1,0):-continueGame(Board), playRandomMove(Board,1,NewBoard,2),!,play(NewBoard,0,1,0).
+play(Board,1,1,0):-continueGame(Board), playRandomMoveWithEnd(Board,1,NewBoard,2),!,play(NewBoard,0,1,0).
 
 %PC - PC
-play(Board,0,1,1):-continueGame(Board), playRandomMove(Board,0,NewBoard,2),!,play(NewBoard,1,1,1).
-play(Board,1,1,1):-continueGame(Board), playRandomMove(Board,1,NewBoard,2),!,play(NewBoard,0,1,1).
+play(Board,0,1,1):-continueGame(Board), playRandomMoveWithEnd(Board,0,NewBoard,2),!,play(NewBoard,1,1,1).
+play(Board,1,1,1):-continueGame(Board), playRandomMoveWithEnd(Board,1,NewBoard,2),!,play(NewBoard,0,1,1).
 
 
 play(_,0,_,_):-write('Jogador Cinzento ganhou!').
@@ -230,21 +230,38 @@ getRandomMove(Board,Player,CostLeft,X,Y,XF,YF,CostToSpend):-repeat,random(1,11,X
 playRandomMove(Board,_,Board,0).	
 playRandomMove(Board,Player,NewBoard,CostLeft):-getRandomMove(Board,Player,CostLeft,X,Y,XF,YF,CostToSpend),movePiece(Board,X,Y,XF,YF,NewBoard2),
 												printTable(NewBoard2),
-												printBotPlay(X,Y,XF,YF),
+												printBotPlay(Player, X,Y,XF,YF),
 												playRandomMove(NewBoard2,Player,NewBoard,CostToSpend).
 
-%printBotPlay(X,Y,XF,YF).
+%printBotPlay(Player, X,Y,XF,YF).
 
-printBotPlay(X,Y,XF,YF):-write('Bot played X:'),write(X),write('|Y:'),write(Y),write(' to XF '), write(XF),write('|YF:'),write(YF),nl.
-												
+printBotPlay(0,X,Y,XF,YF):-write('Yellow Bot played X:'),write(X),write('|Y:'),write(Y),write(' to XF '), write(XF),write('|YF:'),write(YF).
+printBotPlay(1,X,Y,XF,YF):-write('Gray Bot played X:'),write(X),write('|Y:'),write(Y),write(' to XF '), write(XF),write('|YF:'),write(YF).
+
+%playRandomMoveWithEnd(Board,Player,NewBoard,CostLeft). A little smarter Bot that ends whenever there is the opportunity or else it plays randomly.
+
+playRandomMoveWithEnd(Board,_,Board,0).
+
+playRandomMoveWithEnd(Board,0,NewBoard,2):-checkMateYellow(Board,X,Y,XF,YF),movePiece(Board,X,Y,XF,YF,NewBoard2),
+													printTable(NewBoard2),
+													printBotPlay(0, X,Y,XF,YF), write(' - Ended with CheckMate function'), nl,
+													playRandomMoveWithEnd(NewBoard2,_,NewBoard,0).
+													
+playRandomMoveWithEnd(Board,1,NewBoard,2):-checkMateGray(Board,X,Y,XF,YF),movePiece(Board,X,Y,XF,YF,NewBoard2),
+													printTable(NewBoard2),
+													printBotPlay(1, X,Y,XF,YF), write(' - Ended with CheckMate function'),nl,
+													playRandomMoveWithEnd(NewBoard2,_,NewBoard,0).
+
+playRandomMoveWithEnd(Board,Player,NewBoard,CostLeft):-playRandomMove(Board,Player,NewBoard,CostLeft).
+	
 												
 %checkMateYellow(Board).
 
-checkMateYellow(Board):-whereM(Board,X,Y),(inLine(Board,X,Y,1,Y);inLine(Board,X,Y,11,Y);inLine(Board,X,Y,X,1);inLine(Board,X,Y,X,11)).
+checkMateYellow(Board,X,Y,XF,YF):-whereM(Board,X,Y),((inLine(Board,X,Y,1,Y),XF is 1, YF is Y);(inLine(Board,X,Y,11,Y),XF is 11, YF is Y);(inLine(Board,X,Y,X,1),XF is X, YF is 1);(inLine(Board,X,Y,X,11),XF is X, YF is 11)).
 
 %checkMateGray(Board).
 
-checkMateGray(Board):-whereM(Board,X,Y),getDiagonals(X,Y,XF,YF),whatValue(Board,XF,YF,Value),Value =:= 1.
+checkMateGray(Board,X,Y,XF,YF):-whereM(Board,X,Y),getDiagonals(X,Y,XTemp,YTemp),whatValue(Board,XTemp,YTemp,Value),Value =:= 1,XF is XTemp,YF is YTemp.
 
 %%%%%%%%%%%%%%%%%%%%%% COPIADO CARALHO CUIDADO %%%%%%%%%%%%%%%%%%%%%%
 
