@@ -194,26 +194,25 @@ getAllElements([_|Rest],Y):-getAllElements(Rest,Y).
 %%%%%%%%%%%%%%%%%%%%%%%%%   BOT   %%%%%%%%%%%%%%%%%%%%%%%
 
 
-getBestMove(Board,Player,Move,CostLeft):-	listAllPossibleMoves(Board,Player,CostLeft,L),random_permutation(L,List),
-															evaluate_and_choose(List,Board,Player,(_,-2000),Move).
+getBestMove(Board,Player,Move,CostLeft):-	listAllPossibleMoves(Board,Player,2,L),random_permutation(L,List),
+											evaluate_and_choose(List,Board,Player,(_,-2000),Move,_).
 
 %evaluate_and_choose  Based on the Art of Prolog predicate
 
-evaluate_and_choose([],_,_,(Move,_),Move).
+evaluate_and_choose([],_,_,(Move,Value),Move,Value).
 
-evaluate_and_choose([X-Y-XF-YF-1 | ListMoves] ,Board, Player ,Record, BestMove):-
+evaluate_and_choose([X-Y-XF-YF-CostLeft|ListMoves] ,Board, Player ,Record, BestMove,BestValue):-CostLeft =:= 1,write('HERE1'),
 				movePiece(Board,X,Y,XF,YF,NewBoard),
-				getBestMove(NewBoard,Player,X1-Y1-XF1-YF1-0,1),
-				movePiece(NewBoard,X1,Y1,XF1,YF1,NewBoard2),
-				evaluateBoard(NewBoard2,Player,Value),
-				updateBestMove([X-Y-XF-YF-1,X1-Y1-XF1-YF1-0], Value, Record, Record1),
-				evaluate_and_choose(ListMoves,Board,Player,Record1,BestMove).
+				listAllPossibleMoves(Board,Player,1,L),random_permutation(L,List),
+				evaluate_and_choose(List,NewBoard,Player,(_,-2000),BestCurrMove,BestCurrValue),
+				updateBestMove([X-Y-XF-YF-1,BestCurrMove], BestCurrValue, Record, Record1),
+				evaluate_and_choose(ListMoves,Board,Player,Record1,BestMove,BestValue).
 
-evaluate_and_choose([X-Y-XF-YF-0 | ListMoves] ,Board, Player ,Record, BestMove):-
+evaluate_and_choose([X-Y-XF-YF-CostLeft|ListMoves] ,Board, Player ,Record, BestMove,BestValue):-CostLeft =:= 0,write('HERE2'),
 				movePiece(Board,X,Y,XF,YF,NewBoard),
 				evaluateBoard(NewBoard,Player,Value),
-				updateBestMove(X-Y-XF-YF-0, Value, Record, Record1),
-				evaluate_and_choose(ListMoves,Board,Player,Record1,BestMove).
+				updateBestMove(X-Y-XF-YF-CostLeft, Value, Record, Record1),
+				evaluate_and_choose(ListMoves,Board,Player,Record1,BestMove,BestValue).
 
 
 updateBestMove(_,Value,(Move1,Value1),(Move1,Value1)):- Value =< Value1.
@@ -223,11 +222,11 @@ updateBestMove(Move,Value,(_,Value1),(Move,Value)):- Value > Value1.
 %evaluateBoard(Board,Player,Value).
 
 
-evaluateBoard(Board,_,Value):- 	\+(continueGame(Board)),write('passa aqui1'),Value is 2000.
-evaluateBoard(Board,0,Value):-	checkMateGray(Board,_,_,_,_),write('passa aqui3'),Value is -1500.
-evaluateBoard(Board,0,Value):-	checkMateYellow(Board,_,_,_,_),\+ (checkMateGray(Board,_,_,_,_)),write('passa aqui2'),Value is 1500.
-evaluateBoard(Board,1,Value):-	checkMateYellow(Board,_,_,_,_),write('passa aqui4'),Value is -1500.
-evaluateBoard(Board,1,Value):-	checkMateGray(Board,_,_,_,_),\+ (checkMateYellow(Board,_,_,_,_)),write('passa aqui5'),Value is 1500.
+evaluateBoard(Board,_,Value):- 	\+(continueGame(Board)),Value is 2000.
+evaluateBoard(Board,0,Value):-	checkMateGray(Board,_,_,_,_),Value is -1500.
+evaluateBoard(Board,0,Value):-	checkMateYellow(Board,_,_,_,_),\+ (checkMateGray(Board,_,_,_,_)),Value is 1500.
+evaluateBoard(Board,1,Value):-	checkMateYellow(Board,_,_,_,_),Value is -1500.
+evaluateBoard(Board,1,Value):-	checkMateGray(Board,_,_,_,_),\+ (checkMateYellow(Board,_,_,_,_)),Value is 1500.
 evaluateBoard(Board,0,Value):-	motherShipPositionValue(Board,MValue),getNShips(Board,0,NPlayer),
 								getNShips(Board,1,NPlayer1),Value is (MValue+NPlayer-NPlayer1).
 evaluateBoard(Board,1,Value):-	getNShips(Board,1,NPlayer),
