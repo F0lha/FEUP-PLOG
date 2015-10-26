@@ -24,3 +24,7 @@ recursive(N,N1,N2):- N1 > 1,N5 is N mod N1,N3 is N1-1,recursive(N,N3,N5).
 findElem(Elem,[Elem|Rest]).
 
 findElem(Elem,[X|Rest]):- is_list([X|Rest]),findElem(Elem,Rest).
+
+a(1,2).
+
+%mais_proximos(+Idade,-ListaProximos).

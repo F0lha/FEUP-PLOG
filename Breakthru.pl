@@ -21,7 +21,7 @@ initial_board(
 	[0,0,0,0,0,0,0,0,0,0,0]]).
 	
 	final_board(
-	[[2,0,0,0,1,0,2,0,0,0,0],
+	[[2,0,0,0,1,0,0,0,0,0,0],
 	[0,0,0,1,0,0,5,0,0,0,0],
 	[0,1,2,0,0,2,0,0,0,1,0],
 	[0,0,1,0,0,0,0,0,1,0,0],	
@@ -33,25 +33,27 @@ initial_board(
 	[0,0,0,0,0,0,0,1,0,0,0],
 	[0,0,0,0,0,0,0,0,0,0,0]]).
 
-testing(X,Y,XF,YF):-final_board(Board),listAllPossibleMoves(Board,0,2,List),evaluate_and_choose(List,Board,0,(_,-1000),X-Y-XF-YF-_).
+testing(N):-final_board(Board),numberOfCheckMateYellow(Board,N).
 	
-%testing(Value):-final_board(Board),evaluateBoard(Board,0,Value).
+%testing(Board):-final_board(Board),checkMateYellow(Board,_,_,_).
 
 %%%% MENUS %%%%
 
 playMenu:-nl,
 nl,
-write('1 - HUM - HUM '),nl,
-write('2 - HUM - PC '),nl,
-write('3 - PC - PC '),nl,
-write('4 - Back '), nl,
+write('1 - HUM(Y) - HUM(G) '),nl,
+write('2 - HUM(Y) - PC(G) '),nl,
+write('3 -  PC(Y) - HUM(G) '),nl,
+write('4 -  PC(Y) - PC(G) '),nl,
+write('5 - Back '), nl,
 read(Answer), playMenuAnswer(Answer).
 
 
 playMenuAnswer(1):-initial_board(Board), playFirst(Board,0,0),!,menu.
 playMenuAnswer(2):-initial_board(Board), playFirst(Board,0,1),!,menu.
-playMenuAnswer(3):-initial_board(Board), playFirst(Board,1,1),!,menu.
-playMenuAnswer(4):-!,menu.
+playMenuAnswer(3):-initial_board(Board), playFirst(Board,1,0),!,menu.
+playMenuAnswer(4):-initial_board(Board), playFirst(Board,1,1),!,menu.
+playMenuAnswer(5):-!,menu.
 playMenuAnswer(_):-write('Wrong Input'),nl,nl,!,playMenu.
 
 menu:- nl, write('Bem Vindo ao BreakThru'),nl,
@@ -116,25 +118,38 @@ findElem(Elem,[X|Rest]):- \+(is_list(X)),findElem(Elem,Rest).
 
 %%%%%%%%%%%%%%%%%% Movimentação de Peças %%%%%%%%%%%%%%%%%%%%%%%%
 
+%chooseBotDifficulty(Dif,N).
+chooseBotDifficulty(Dif,0):-nl,write('Choose Difficulty for Yellow Bot :'),nl,write('1 - Random'),nl,write('2 - Random with CheckMate'),nl,write('3 - Hard'),nl, read(Dif),(Dif=:=1;Dif=:=2;Dif=:=3).
+chooseBotDifficulty(Dif,1):-nl,write('Choose Difficulty for Gray Bot :'),nl,write('1 - Random'),nl,write('2 - Random with CheckMate'),nl,write('3 - Hard'),nl, read(Dif),(Dif=:=1;Dif=:=2;Dif=:=3).
+chooseBotDifficulty(Dif,N):-write('Input error, Try again'),nl,chooseBotDifficulty(Dif,N).
+
 %playFirst(Board,Robot,Robot).
 
-playFirst(Board,Bot1,Bot2):-printTable(Board,0,0),play(Board,0,Bot1,Bot2).
+playFirst(Board,0,0):-printTable(Board,0,0),play(Board,0,0,0,0,0).
+playFirst(Board,0,1):-chooseBotDifficulty(Dif,1),printTable(Board,0,0),play(Board,0,0,1,0,Dif).
+playFirst(Board,1,0):-chooseBotDifficulty(Dif,0),play(Board,0,1,0,Dif,0).
+playFirst(Board,1,1):-chooseBotDifficulty(Dif1,0),chooseBotDifficulty(Dif2,1),play(Board,0,1,1,Dif1,Dif2).
 
-%play(Board,CurrPlayer,Bot1,Bot2). TODO play(Board,CurrPlayer,Bot1,Bot2,Level) TODO Level
+%play(Board,CurrPlayer,Bot1,Bot2,Level1,Level2). TODO play(Board,CurrPlayer,Bot1,Bot2,Level) TODO Level
 
-play(Board,0,Bot1,Bot2):-continueGame(Board), whoPlays(Board,0,NewBoard,Bot1,Bot2,_),!,play(NewBoard,1,Bot1,Bot2).
-play(Board,1,Bot1,Bot2):-continueGame(Board), whoPlays(Board,1,NewBoard,Bot1,Bot2,_),!,play(NewBoard,0,Bot1,Bot2).
+play(Board,0,Bot1,Bot2,Level1,Level2):-continueGame(Board), whoPlays(Board,0,NewBoard,Bot1,Bot2,Level1,Level2),!,play(NewBoard,1,Bot1,Bot2,Level1,Level2).
+play(Board,1,Bot1,Bot2,Level1,Level2):-continueGame(Board), whoPlays(Board,1,NewBoard,Bot1,Bot2,Level1,Level2),!,play(NewBoard,0,Bot1,Bot2,Level1,Level2).
 
+%error difficulty
 
-play(_,0,_,_):-write('Jogador Cinzento ganhou!').
-play(_,1,_,_):-write('Jogador Amarelo ganhou!').
+play(_,0,_,_,_,_):-write('Jogador Cinzento ganhou!').
+play(_,1,_,_,_,_):-write('Jogador Amarelo ganhou!').
 
-%whoPlays(Board,Player,NewBoard,Bot1,Bot2,Level). TODO LEVEL
+%whoPlays(Board,Player,NewBoard,Bot1,Bot2,Level1,Level2). TODO LEVEL
 
-whoPlays(Board,0,NewBoard,0,_,_):-chooseMove(Board,0,NewBoard,2).
-whoPlays(Board,1,NewBoard,_,0,_):-chooseMove(Board,1,NewBoard,2).
-whoPlays(Board,0,NewBoard,1,_,_):-playBestMove(Board,0,NewBoard,2).
-whoPlays(Board,1,NewBoard,_,1,_):-playBestMove(Board,1,NewBoard,2).
+whoPlays(Board,0,NewBoard,0,_,_,_):-chooseMove(Board,0,NewBoard,2).
+whoPlays(Board,1,NewBoard,_,0,_,_):-chooseMove(Board,1,NewBoard,2).
+whoPlays(Board,0,NewBoard,1,_,1,_):-playRandomMove(Board,0,NewBoard,2).
+whoPlays(Board,1,NewBoard,_,1,_,1):-playRandomMove(Board,1,NewBoard,2).
+whoPlays(Board,0,NewBoard,1,_,2,_):-playRandomMoveWithEnd(Board,0,NewBoard,2).
+whoPlays(Board,1,NewBoard,_,1,_,2):-playRandomMoveWithEnd(Board,1,NewBoard,2).
+whoPlays(Board,0,NewBoard,1,_,3,_):-playBestMove(Board,0,NewBoard,2).
+whoPlays(Board,1,NewBoard,_,1,_,3):-playBestMove(Board,1,NewBoard,2).
 
 %canUseThisPiece(Board,X,Y,Player,CostLeft,NewCost).
 
@@ -195,7 +210,7 @@ getAllElements([_|Rest],Y):-getAllElements(Rest,Y).
 
 %getBestMove(Board,Player,X,Y,YF,CostToSpend).
 
-getBestMove(Board,Player,X,Y,XF,YF,CostLeft,CostToSpend):-listAllPossibleMoves(Board,Player,CostLeft,L),random_permutation(L,List),evaluate_and_choose(List,Board,Player,(_,-2000),X-Y-XF-YF-CostToSpend).
+getBestMove(Board,Player,X,Y,XF,YF,CostLeft,CostToSpend):-listAllPossibleMoves(Board,Player,CostLeft,L),random_permutation(L,List),evaluate_and_choose(List,Board,Player,(_,-10000),X-Y-XF-YF-CostToSpend).
 
 %evaluate_and_choose  Based on the Art of Prolog predicate
 
@@ -215,11 +230,11 @@ updateBestMove(Move,Value,(_,Value1),(Move,Value)):- Value > Value1.
 %evaluateBoard(Board,Player,Value).
 
 
-evaluateBoard(Board,_,Value):- 	\+(continueGame(Board)),write('passa aqui1'),Value is 2000.
-evaluateBoard(Board,0,Value):-	checkMateGray(Board,_,_,_,_),write('passa aqui3'),Value is -1500.
-evaluateBoard(Board,0,Value):-	checkMateYellow(Board,_,_,_,_),\+ (checkMateGray(Board,_,_,_,_)),write('passa aqui2'),Value is 1500.
-evaluateBoard(Board,1,Value):-	checkMateYellow(Board,_,_,_,_),write('passa aqui4'),Value is -1500.
-evaluateBoard(Board,1,Value):-	checkMateGray(Board,_,_,_,_),\+ (checkMateYellow(Board,_,_,_,_)),write('passa aqui5'),Value is 1500.
+evaluateBoard(Board,_,Value):- 	\+(continueGame(Board)),Value is 10000.
+evaluateBoard(Board,0,Value):-	numberOfCheckMateGray(Board,N),Value is -1500*N.
+evaluateBoard(Board,0,Value):-	numberOfCheckMateYellow(Board,N),\+ (checkMateGray(Board,_,_,_,_)),Value is 1500*N.
+evaluateBoard(Board,1,Value):-	numberOfCheckMateYellow(Board,N),Value is -1500*N.
+evaluateBoard(Board,1,Value):-	numberOfCheckMateGray(Board,N),\+ (checkMateYellow(Board,_,_,_,_)),Value is N*1500.
 evaluateBoard(Board,0,Value):-	motherShipPositionValue(Board,MValue),getNShips(Board,0,NPlayer),
 								getNShips(Board,1,NPlayer1),Value is (MValue+NPlayer-NPlayer1).
 evaluateBoard(Board,1,Value):-	getNShips(Board,1,NPlayer),
@@ -243,7 +258,7 @@ getNShipsRecursive(Board,Player,X,Y,NCurr,NProx):-whatValue(Board,X,Y,Value),Y2 
 
 %motherShipPositionValue(Value).
 
-motherShipPositionValue(Board,Value):-whereM(Board,X,Y), Value is sqrt((((X - 1) mod 5)*((X - 1) mod 5)) + (((Y - 1) mod 5)*((Y - 1) mod 5))).
+motherShipPositionValue(Board,Value):-whereM(Board,X,Y), Value is sqrt((abs(X-6)*abs(X-6)) + (abs(Y-6)*abs(Y-6))).
 
 %listAllPossibleMoves(Board,Player,CostLeft,X,Y,XF,YF,CostToSpend,List).
 
@@ -307,12 +322,21 @@ playBestMove(Board,Player,NewBoard,CostLeft):-	getBestMove(Board,Player,X,Y,XF,Y
 												printBestBotPlay(Player,X,Y,XF,YF),nl,
 												printTable(NewBoard2,XF,YF),
 												playBestMove(NewBoard2,Player,NewBoard,CostToSpend).
+												
+
+												
+%numberOfCheckMateYellow(Board,N).
+numberOfCheckMateYellow(Board,N):-findall(X-Y-XF-YF,checkMateYellow(Board,X,Y,XF,YF),List),length(List,N),((N =:= 0,fail);(N=\=0)).
+
+%numberOfCheckMateGray(Board,N).
+numberOfCheckMateGray(Board,N):-findall(X-Y-XF-YF,checkMateGray(Board,X,Y,XF,YF),List),length(List,N),((N =:= 0,fail);(N=\=0)).
+												
 	
-%checkMateYellow(Board).
+%checkMateYellow(Board,X,Y,XF,YF).
 
 checkMateYellow(Board,X,Y,XF,YF):-whereM(Board,X,Y),((inLine(Board,X,Y,1,Y),XF is 1, YF is Y);(inLine(Board,X,Y,11,Y),XF is 11, YF is Y);(inLine(Board,X,Y,X,1),XF is X, YF is 1);(inLine(Board,X,Y,X,11),XF is X, YF is 11)).
 
-%checkMateGray(Board).
+%checkMateGray(Board,XF,YF,X,Y).
 
 checkMateGray(Board,XF,YF,X,Y):-whereM(Board,X,Y),getDiagonals(X,Y,XTemp,YTemp),whatValue(Board,XTemp,YTemp,Value),Value =:= 1,XF is XTemp,YF is YTemp.
 
