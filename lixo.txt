@@ -1,0 +1,32 @@
+%listAllPossibleMovesOfBoards(ListBoards,Player,CostLeft,List).
+
+listAllPossibleMovesOfBoards([],Player,CostLeft,[]).
+
+listAllPossibleMovesOfBoards([Board|RestBoard],Player,CostLeft,List):- listAllPossibleMoves(Board,Player,1,CurrList),
+																		listAllPossibleMovesOfBoards(RestBoard,RestMoves,Player,CostLeft,NewList),
+																		append([CurrList],NewList).
+																		
+%applyListMovestoListBoards(ListBoards,ListMoves,NewListBoards).
+
+applyListMovestoListBoards([],[],[]).
+
+applyListMovestoListBoards([Board|RestBoards],[ListMoves|RestListMoves],NewListBoards):-applyListMovestoBoard(Board,ListMoves,ListBoards),
+																						applyListMovestoListBoards(RestBoards,RestListMoves,NewListBoards2),
+																						append(ListBoards,NewListBoards2,NewListBoards).
+																							
+
+%applyListMovestoBoard(Board,ListMoves,ListBoards).
+
+applyListMovestoBoard(_,[],[]).
+
+applyListMovestoBoard(Board,[Move|RestMoves],ListBoards):-applyMoveToBoard(Board,Move,NewBoard),applyListMovestoBoard(Board,RestMoves,NewListBoards), append([NewBoard],NewListBoards,ListBoards).
+
+%applyMoveToBoard(Board,Move,NewBoard).
+
+applyMoveToBoard(Board,X-Y-XF-YF-_,NewBoard):-movePiece(Board,X,Y,XF,YF,NewBoard).
+
+%getBestMove(Board,Player,X,Y,YF,CostToSpend).
+
+getBestMove(Board,Player,X,Y,XF,YF,2,CostToSpend):-	listAllPossibleMoves(Board,Player,1,L1),applyListMovestoBoard(Board,L1,LB1),
+													listAllPossibleMovesOfBoards(LB1,Player,1,L2),applyListMovestoListBoards(LB1,L2,AllBoards),
+													chooseBestBoard(AllBoards,-2000,Final,Board).

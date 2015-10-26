@@ -22,7 +22,7 @@ initial_board(
 	
 	final_board(
 	[[2,0,0,0,1,0,2,0,0,0,0],
-	[0,0,0,1,0,0,5,0,0,0,0],
+	[0,0,0,1,0,0,0,0,0,5,0],
 	[0,1,2,0,0,2,0,0,0,1,0],
 	[0,0,1,0,0,0,0,0,1,0,0],	
 	[0,0,0,0,0,0,0,0,0,1,0],
@@ -33,7 +33,7 @@ initial_board(
 	[0,0,0,0,0,0,0,1,0,0,0],
 	[0,0,0,0,0,0,0,0,0,0,0]]).
 
-testing(X,Y,XF,YF):-final_board(Board),listAllPossibleMoves(Board,0,2,List),evaluate_and_choose(List,Board,0,(_,-1000),X-Y-XF-YF-_).
+testing:-final_board(Board),playBestMove(Board,1,NewBoard),printTable(NewBoard,0,0).
 	
 %testing(Value):-final_board(Board),evaluateBoard(Board,0,Value).
 
@@ -49,7 +49,7 @@ read(Answer), playMenuAnswer(Answer).
 
 
 playMenuAnswer(1):-initial_board(Board), playFirst(Board,0,0),!,menu.
-playMenuAnswer(2):-initial_board(Board), playFirst(Board,0,1),!,menu.
+playMenuAnswer(2):-initial_board(Board), playFirst(Board,1,0),!,menu.
 playMenuAnswer(3):-initial_board(Board), playFirst(Board,1,1),!,menu.
 playMenuAnswer(4):-!,menu.
 playMenuAnswer(_):-write('Wrong Input'),nl,nl,!,playMenu.
@@ -133,8 +133,8 @@ play(_,1,_,_):-write('Jogador Amarelo ganhou!').
 
 whoPlays(Board,0,NewBoard,0,_,_):-chooseMove(Board,0,NewBoard,2).
 whoPlays(Board,1,NewBoard,_,0,_):-chooseMove(Board,1,NewBoard,2).
-whoPlays(Board,0,NewBoard,1,_,_):-playBestMove(Board,0,NewBoard,2).
-whoPlays(Board,1,NewBoard,_,1,_):-playBestMove(Board,1,NewBoard,2).
+whoPlays(Board,0,NewBoard,1,_,_):-playBestMove(Board,0,NewBoard).
+whoPlays(Board,1,NewBoard,_,1,_):-playBestMove(Board,1,NewBoard).
 
 %canUseThisPiece(Board,X,Y,Player,CostLeft,NewCost).
 
@@ -193,18 +193,26 @@ getAllElements([_|Rest],Y):-getAllElements(Rest,Y).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%   BOT   %%%%%%%%%%%%%%%%%%%%%%%
 
-%getBestMove(Board,Player,X,Y,YF,CostToSpend).
 
-getBestMove(Board,Player,X,Y,XF,YF,CostLeft,CostToSpend):-listAllPossibleMoves(Board,Player,CostLeft,L),random_permutation(L,List),evaluate_and_choose(List,Board,Player,(_,-2000),X-Y-XF-YF-CostToSpend).
+getBestMove(Board,Player,Move,CostLeft):-	listAllPossibleMoves(Board,Player,CostLeft,L),random_permutation(L,List),
+															evaluate_and_choose(List,Board,Player,(_,-2000),Move).
 
 %evaluate_and_choose  Based on the Art of Prolog predicate
 
 evaluate_and_choose([],_,_,(Move,_),Move).
 
-evaluate_and_choose([X-Y-XF-YF-CostToSpend | ListMoves] ,Board, Player ,Record, BestMove):-
+evaluate_and_choose([X-Y-XF-YF-1 | ListMoves] ,Board, Player ,Record, BestMove):-
+				movePiece(Board,X,Y,XF,YF,NewBoard),
+				getBestMove(NewBoard,Player,X1-Y1-XF1-YF1-0,1),
+				movePiece(NewBoard,X1,Y1,XF1,YF1,NewBoard2),
+				evaluateBoard(NewBoard2,Player,Value),
+				updateBestMove([X-Y-XF-YF-1,X1-Y1-XF1-YF1-0], Value, Record, Record1),
+				evaluate_and_choose(ListMoves,Board,Player,Record1,BestMove).
+
+evaluate_and_choose([X-Y-XF-YF-0 | ListMoves] ,Board, Player ,Record, BestMove):-
 				movePiece(Board,X,Y,XF,YF,NewBoard),
 				evaluateBoard(NewBoard,Player,Value),
-				updateBestMove(X-Y-XF-YF-CostToSpend, Value, Record, Record1),
+				updateBestMove(X-Y-XF-YF-0, Value, Record, Record1),
 				evaluate_and_choose(ListMoves,Board,Player,Record1,BestMove).
 
 
@@ -299,14 +307,21 @@ playRandomMoveWithEnd(Board,1,NewBoard,2):-checkMateGray(Board,X,Y,XF,YF),movePi
 
 playRandomMoveWithEnd(Board,Player,NewBoard,CostLeft):-playRandomMove(Board,Player,NewBoard,CostLeft).
 	
-%playBestMove(Board,Player,NewBoard,CostLeft).	
+%playBestMove(Board,Player,NewBoard).	
 	
-playBestMove(Board,_,Board,0).
 	
-playBestMove(Board,Player,NewBoard,CostLeft):-	getBestMove(Board,Player,X,Y,XF,YF,CostLeft,CostToSpend),movePiece(Board,X,Y,XF,YF,NewBoard2),
+playBestMove(Board,Player,NewBoard):-	getBestMove(Board,Player,Move,2),
+												((is_list(Move),nth0(0,Move,X-Y-XF-YF-_),nth0(0,Move,X1-Y1-XF1-YF1-_),
+												movePiece(Board,X,Y,XF,YF,NewBoard),
 												printBestBotPlay(Player,X,Y,XF,YF),nl,
-												printTable(NewBoard2,XF,YF),
-												playBestMove(NewBoard2,Player,NewBoard,CostToSpend).
+												printTable(NewBoard,XF,YF),
+												movePiece(NewBoard,X1,Y1,XF1,YF1,NewBoard2),
+												printBestBotPlay(Player,X1,Y1,XF1,YF1),nl,
+												printTable(NewBoard2,XF1,YF1));
+												(Move is X-Y-XF-YF-_,
+												movePiece(Board,X,Y,XF,YF,NewBoard),
+												printBestBotPlay(Player,X,Y,XF,YF),nl,
+												printTable(NewBoard,XF,YF))).
 	
 %checkMateYellow(Board).
 
@@ -347,9 +362,3 @@ writePiece(2,1):-write('(A)|'). %%%% Ataque %%%%
 writePiece(5,1):-write('(M)|'). %%%% Objetivo %%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-
-
-	
