@@ -191,11 +191,11 @@ getAllElements([X|_],X).
 getAllElements([_|Rest],Y):-getAllElements(Rest,Y).
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%   BOT   %%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%   BOT   %%%%%%%%%%%%%%%%%%%%%%%
 
 %getBestMove(Board,Player,X,Y,YF,CostToSpend).
 
-getBestMove(Board,Player,X,Y,XF,YF,CostLeft,CostToSpend):-listAllPossibleMoves(Board,Player,CostLeft,L),random_permutation(L,List),evaluate_and_choose(List,Board,0,(_,-1000),X-Y-XF-YF-CostToSpend).
+getBestMove(Board,Player,X,Y,XF,YF,CostLeft,CostToSpend):-listAllPossibleMoves(Board,Player,CostLeft,L),random_permutation(L,List),evaluate_and_choose(List,Board,Player,(_,-2000),X-Y-XF-YF-CostToSpend).
 
 %evaluate_and_choose  Based on the Art of Prolog predicate
 
@@ -215,15 +215,15 @@ updateBestMove(Move,Value,(_,Value1),(Move,Value)):- Value > Value1.
 %evaluateBoard(Board,Player,Value).
 
 
-evaluateBoard(Board,_,Value):- \+(continueGame(Board)),Value is 2000.
-evaluateBoard(Board,0,Value):-checkMateYellow(Board,_,_,_,_),Value is 1000.
-evaluateBoard(Board,0,Value):-checkMateGray(Board,_,_,_,_),Value is -1000.
-evaluateBoard(Board,1,Value):-checkMateYellow(Board,_,_,_,_),Value is -1000.
-evaluateBoard(Board,1,Value):-checkMateGray(Board,_,_,_,_),Value is 1000.
+evaluateBoard(Board,_,Value):- 	\+(continueGame(Board)),write('passa aqui1'),Value is 2000.
+evaluateBoard(Board,0,Value):-	checkMateGray(Board,_,_,_,_),write('passa aqui3'),Value is -1500.
+evaluateBoard(Board,0,Value):-	checkMateYellow(Board,_,_,_,_),\+ (checkMateGray(Board,_,_,_,_)),write('passa aqui2'),Value is 1500.
+evaluateBoard(Board,1,Value):-	checkMateYellow(Board,_,_,_,_),write('passa aqui4'),Value is -1500.
+evaluateBoard(Board,1,Value):-	checkMateGray(Board,_,_,_,_),\+ (checkMateYellow(Board,_,_,_,_)),write('passa aqui5'),Value is 1500.
 evaluateBoard(Board,0,Value):-	motherShipPositionValue(Board,MValue),getNShips(Board,0,NPlayer),
 								getNShips(Board,1,NPlayer1),Value is (MValue+NPlayer-NPlayer1).
-evaluateBoard(Board,1,Value):-	motherShipPositionValue(Board,(MValue)),getNShips(Board,1,NPlayer),
-								getNShips(Board,0,NPlayer1),Value is (-MValue+NPlayer-NPlayer1).
+evaluateBoard(Board,1,Value):-	getNShips(Board,1,NPlayer),
+								getNShips(Board,0,NPlayer1),Value is (NPlayer-NPlayer1).
 
 %getNShips(Board,Player,N).
 
