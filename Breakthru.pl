@@ -48,7 +48,6 @@ write('4 -  PC(Y) - PC(G) '),nl,
 write('5 - Back '), nl,
 read(Answer), playMenuAnswer(Answer).
 
-
 playMenuAnswer(1):-initial_board(Board), playFirst(Board,0,0),!,menu.
 playMenuAnswer(2):-initial_board(Board), playFirst(Board,0,1),!,menu.
 playMenuAnswer(3):-initial_board(Board), playFirst(Board,1,0),!,menu.
@@ -81,7 +80,7 @@ inLine(Board,X,Y,XF,YF):-(X =:= XF, YF >= Y,Low is Y + 1,High is YF, between(Low
 												
 %getDiagonals(X,Y,XF,YF).
 												 
-getDiagonals(X,Y,XF,YF):-findall(XF-YF,diagonal(X,Y,XF,YF),List),getAllElements(List,XF-YF).				
+getDiagonals(X,Y,XF,YF):-findall(XF-YF,diagonal(X,Y,XF,YF),List),member(XF-YF,List).				
 							
 %diagonal(X,Y,XF,YF).
 
@@ -91,13 +90,10 @@ diagonal(X,Y,XF,YF):-XT is X + 1, XB is X - 1,YT is Y + 1, YB is Y - 1,(
 					(XT < 12,YB > 0,XF is XT, YF is YB);
 					(XB > 0,YB > 0,XF is XB, YF is YB)).
 
-					
-					
 %validMove(Board,X,Y,Player).
 
 validMove(Board,X,Y,XF,YF,Player,NewCost,NewestCost):-((getDiagonals(X,Y,XF,YF),playerCost(Board,XF,YF,Player2,_), Player2 =\= -1,Player=\=Player2,matrixGet(Board,X,Y,Value),((Value=:= 5, MoreValue is 0);(MoreValue is 1)));
 											(inLine(Board,X,Y,XF,YF), MoreValue is 0)),checkCost(NewCost,MoreValue,NewestCost),!.
-
 
 %continueGame(Board).
 
@@ -140,8 +136,8 @@ whoPlays(Board,0,NewBoard,1,_,1,_):-playRandomMove(Board,0,NewBoard,2).
 whoPlays(Board,1,NewBoard,_,1,_,1):-playRandomMove(Board,1,NewBoard,2).
 whoPlays(Board,0,NewBoard,1,_,2,_):-playRandomMoveWithEnd(Board,0,NewBoard,2).
 whoPlays(Board,1,NewBoard,_,1,_,2):-playRandomMoveWithEnd(Board,1,NewBoard,2).
-whoPlays(Board,0,NewBoard,1,_,3,_):-playBestMove(Board,0,NewBoard,2).
-whoPlays(Board,1,NewBoard,_,1,_,3):-playBestMove(Board,1,NewBoard,2).
+whoPlays(Board,0,NewBoard,1,_,3,_):-playBestMove(Board,0,NewBoard).
+whoPlays(Board,1,NewBoard,_,1,_,3):-playBestMove(Board,1,NewBoard).
 
 %canUseThisPiece(Board,X,Y,Player,CostLeft,NewCost).
 
@@ -170,8 +166,6 @@ playerCost(_,_,_,-1,0).
 
 movePiece(Board,X,Y,XF,YF,NewBoard):-matrixGet(Board,X,Y,Value),defineSpace(Board,X,Y,0,TempBoard),defineSpace(TempBoard,XF,YF,Value,NewBoard).
 
-
-
 %setList(List,Index,Value,NewList).
 
 setList([_|Rest],1,Value,[Value|Rest]):-!.
@@ -181,17 +175,6 @@ setList([X|Rest],Index,Value,[X|NewRest]):- NewIndex is Index - 1,setList(Rest,N
 %defineSpace(Board,X,Y,Value,NewBoard).
 
 defineSpace(Board,X,Y,Value,NewBoard):-getLine(Board,Y,Line),setList(Line,X,Value,NewLine),setList(Board,Y,NewLine,NewBoard),!.
-
-%defineSpace([],_,_,_,[]).
-
-%defineSpace([_|Rest],1,0,NewValue,NewBoard):-append([NewValue],Rest,NewBoard).
-
-%defineSpace([H|Rest],X,0,NewValue,NewBoard):- X2 is X - 1, defineSpace(Rest,X2,0,NewValue,NewBoard2),append([H],NewBoard2,NewBoard).
-
-%defineSpace([H|Rest], X, Y, NewValue, NewBoard):- X > 0, Y2 is Y -1, Y2 =:= 0, defineSpace(H,X,Y2,NewValue,NewBoard2),append([NewBoard2],Rest,NewBoard).
-
-%defineSpace([H|Rest], X, Y, NewValue, NewBoard):- X > 0, Y2 is Y-1,defineSpace(Rest,X,Y2,NewValue,NewBoard2),append([H],NewBoard2,NewBoard).
-
 
 %%%%%%%%%%%%%%%%%%%%% FUNCOES AUXILIARES   %%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -208,17 +191,11 @@ getLine(Board,Y,Line):-nth1(Y,Board,Line).
 
 matrixGet(Board,X,Y,Value):-nth1(Y,Board,List),nth1(X,List,Value).
 
-%getAllElements(List,Elem).
-
-getAllElements([X|_],X).
-getAllElements([_|Rest],Y):-getAllElements(Rest,Y).
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%   BOT   %%%%%%%%%%%%%%%%%%%%%%%
 
 %getBestMove(Board,Player,X,Y,YF,CostToSpend).
 
-getBestMove(Board,Player,CostLeft,Moves):-	listAllPossibleMoves(Board,Player,2,L),random_permutation(L,List),
+getBestMove(Board,Player,Moves):-	listAllPossibleMoves(Board,Player,2,L),random_permutation(L,List),
 											write('Jogadas Iniciais Possiveis : '),length(List,N),write(N),nl,
 											evaluate_and_choose(List,Board,Player,(_,-10000),Moves),
 											statistics('runtime',Value), write('Tempo de execucao : '), write(Value),nl.
@@ -244,13 +221,10 @@ evaluate_and_choose([X-Y-XF-YF-1 | ListMoves] ,Board, Player ,Record, BestMove):
 				((BestValue =:= 10000,evaluate_and_choose([],Board,Player,Record2,BestMove),!);
 				evaluate_and_choose(ListMoves,Board,Player,Record2,BestMove)).
 
-
 updateBestMove(_,Value,(Move1,Value1),(Move1,Value1)):- Value =< Value1.
 updateBestMove(Move,Value,(_,Value1),(Move,Value)):- Value > Value1.
 
-
 %evaluateBoard(Board,Player,Value).
-
 
 evaluateBoard(Board,_,Value):- 	\+(continueGame(Board)),Value is 10000,!.
 evaluateBoard(Board,0,Value):-	numberOfCheckMateGray(Board,N),Value is -1500*N,!.
@@ -267,7 +241,6 @@ evaluateBoard(Board,1,Value):-	getNShips(Board,1,NPlayer),
 getNShips(Board,0,N):-findall(X-Y,matrixGet(Board,X,Y,2),List),length(List,N).
 
 getNShips(Board,1,N):-findall(X-Y,matrixGet(Board,X,Y,1),List),length(List,N).
-
 
 %motherShipPositionValue(Value).
 
@@ -291,8 +264,7 @@ allPossibleMoves(Board,Player,CostLeft,X,Y,XF,YF,CostToSpend):-		between(1,11,XI
 %getRandomMove(Board,Player,CostLeft,X,Y,XF,YF,CostToSpend).
 
 getRandomMove(Board,Player,CostLeft,X,Y,XF,YF,CostToSpend):-listAllPossibleMoves(Board,Player,CostLeft,List),random_member(X-Y-XF-YF-CostToSpend,List).
-														
-
+							
 %playRandomMove(Board,Player,NewBoard,CostLeft).
 
 playRandomMove(Board,_,Board,0).	
@@ -336,22 +308,17 @@ applyMoves([X-Y-XF-YF-_|Rest],Board,Player,NewBoard):-	movePiece(Board,X,Y,XF,YF
 														printTable(NewBoard2,XF,YF),
 														applyMoves(Rest,NewBoard2,Player,NewBoard).
 
-	
-%playBestMove(Board,Player,NewBoard,CostLeft).	
-	
-	
-playBestMove(Board,Player,NewBoard,CostLeft):-	getBestMove(Board,Player,CostLeft,(Moves,_)),
-												applyMoves(Moves,Board,Player,NewBoard),!.
-												
+%playBestMove(Board,Player,NewBoard).	
 
-												
+playBestMove(Board,Player,NewBoard):-	getBestMove(Board,Player,(Moves,_)),
+												applyMoves(Moves,Board,Player,NewBoard),!.
+											
 %numberOfCheckMateYellow(Board,N).
 numberOfCheckMateYellow(Board,N):-findall(X-Y-XF-YF,checkMateYellow(Board,X,Y,XF,YF),List),length(List,N),((N =:= 0,fail);(N=\=0)).
 
 %numberOfCheckMateGray(Board,N).
 numberOfCheckMateGray(Board,N):-findall(X-Y-XF-YF,checkMateGray(Board,X,Y,XF,YF),List),length(List,N),((N =:= 0,fail);(N=\=0)).
 												
-	
 %checkMateYellow(Board,X,Y,XF,YF).
 
 checkMateYellow(Board,X,Y,XF,YF):-whereM(Board,X,Y),((inLine(Board,X,Y,1,Y),XF is 1, YF is Y);(inLine(Board,X,Y,11,Y),XF is 11, YF is Y);(inLine(Board,X,Y,X,1),XF is X, YF is 1);(inLine(Board,X,Y,X,11),XF is X, YF is 11)).
@@ -361,7 +328,6 @@ checkMateYellow(Board,X,Y,XF,YF):-whereM(Board,X,Y),((inLine(Board,X,Y,1,Y),XF i
 checkMateGray(Board,XF,YF,X,Y):-whereM(Board,X,Y),getDiagonals(X,Y,XTemp,YTemp),matrixGet(Board,XTemp,YTemp,Value),Value =:= 1,XF is XTemp,YF is YTemp.
 
 %%%%%%%%%%%%%%%%%%%%%% Printing  %%%%%%%%%%%%%%%%%%%%%%
-
 
 %printBoard(Board,X,Y).
 
@@ -376,8 +342,6 @@ printLines(Board,X,Y):-between(1,11,YIndex),nl, write(YIndex),((YIndex < 10, wri
 printRestLine(Board,YIndex,X,Y):-	between(1,11,XIndex), matrixGet(Board,XIndex,YIndex,Value),
 									((XIndex=:=X,YIndex=:=Y,writePiece(Value,1));( \+ (XIndex=:=X,YIndex=:=Y),writePiece(Value,0))), XIndex =:= 11,nl,printDivison(_), YIndex =:= 11.
 
-
-
 printDivison(_):-write('-----------------------------------------------').
 
 printFirstLine(_):-write('    1   2   3   4   5   6   7   8   9   10  11 ').
@@ -391,9 +355,3 @@ writePiece(2,1):-write('(A)|'). %%%% Ataque %%%%
 writePiece(5,1):-write('(M)|'). %%%% Objetivo %%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-
-
-	
