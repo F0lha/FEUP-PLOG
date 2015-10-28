@@ -33,7 +33,7 @@ initial_board(
 	[0,0,0,0,0,0,0,0,0,0,0],
 	[0,0,0,0,0,0,0,0,0,0,0]]).
 
-testing(L):-initial_board(Board), listAllPossibleMoves(Board,0,2,L).
+testing(L):-initial_board(Board), getNShips(Board,1,L).
 	
 %testing(Board):-final_board(Board),checkMateYellow(Board,_,_,_).
 
@@ -220,7 +220,8 @@ getAllElements([_|Rest],Y):-getAllElements(Rest,Y).
 
 getBestMove(Board,Player,CostLeft,Moves):-	listAllPossibleMoves(Board,Player,2,L),random_permutation(L,List),
 											write('Jogadas Iniciais Possiveis : '),length(List,N),write(N),nl,
-											evaluate_and_choose(List,Board,Player,(_,-10000),Moves).
+											evaluate_and_choose(List,Board,Player,(_,-10000),Moves),
+											statistics('runtime',Value), write('Tempo de execucao : '), write(Value),nl.
 
 %evaluate_and_choose  Based on the Art of Prolog predicate
 
@@ -230,7 +231,7 @@ evaluate_and_choose([X-Y-XF-YF-0 | ListMoves] ,Board, Player ,Record, BestMove):
 				movePiece(Board,X,Y,XF,YF,NewBoard),
 				evaluateBoard(NewBoard,Player,Value),
 				updateBestMove([X-Y-XF-YF-0], Value, Record, Record1),
-				((Value =:= 10000,evaluate_and_choose([],Board,Player,Record1,BestMove));
+				((Value =:= 10000,evaluate_and_choose([],Board,Player,Record1,BestMove),!);
 				evaluate_and_choose(ListMoves,Board,Player,Record1,BestMove)).
 
 evaluate_and_choose([X-Y-XF-YF-1 | ListMoves] ,Board, Player ,Record, BestMove):-
@@ -240,7 +241,7 @@ evaluate_and_choose([X-Y-XF-YF-1 | ListMoves] ,Board, Player ,Record, BestMove):
 				evaluate_and_choose(List3,NewBoard,Player,(_,-10000),(BestMove2,BestValue)),
 				append([X-Y-XF-YF-1],BestMove2,Result),
 				updateBestMove(Result, BestValue, Record, Record2),
-				((BestValue =:= 10000,evaluate_and_choose([],Board,Player,Record2,BestMove));
+				((BestValue =:= 10000,evaluate_and_choose([],Board,Player,Record2,BestMove),!);
 				evaluate_and_choose(ListMoves,Board,Player,Record2,BestMove)).
 
 
@@ -267,19 +268,6 @@ getNShips(Board,0,N):-findall(X-Y,matrixGet(Board,X,Y,2),List),length(List,N).
 
 getNShips(Board,1,N):-findall(X-Y,matrixGet(Board,X,Y,1),List),length(List,N).
 
-%getNShips(Board,Player,N):-getNShipsRecursive(Board,Player,1,1,0,N).
-
-%getNShipsRecursive(Board,Player,X,Y,NCurr,NProx). Obligatory to be called with X and Y at 1.
-
-getNShipsRecursive(_,_,11,12,N,N).
-
-getNShipsRecursive(Board,Player,X,12,NCurr,NProx):-X1 is X + 1, getNShipsRecursive(Board,Player,X1,1,NCurr,NProx).
-
-getNShipsRecursive(Board,0,X,Y,NCurr,NProx):-matrixGet(Board,X,Y,Value), Value=:=2 ,N2 is NCurr+1,Y2 is Y + 1,getNShipsRecursive(Board,0,X,Y2,N2,NProx).
-
-getNShipsRecursive(Board,1,X,Y,NCurr,NProx):-matrixGet(Board,X,Y,Value), Value=:=1 ,N2 is NCurr+1,Y2 is Y + 1,getNShipsRecursive(Board,1,X,Y2,N2,NProx).
-
-getNShipsRecursive(Board,Player,X,Y,NCurr,NProx):-matrixGet(Board,X,Y,Value),Y2 is Y + 1,((Player =:= 0, Value =\= 2);(Player =:= 1, Value =\= 1)),getNShipsRecursive(Board,Player,X,Y2,NCurr,NProx).
 
 %motherShipPositionValue(Value).
 
