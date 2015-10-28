@@ -33,7 +33,7 @@ initial_board(
 	[0,0,0,0,0,0,0,0,0,0,0],
 	[0,0,0,0,0,0,0,0,0,0,0]]).
 
-testing(L):-initial_board(Board), getNShips(Board,1,L).
+testing(Moves):-initial_board(Board),getBestMove(Board,0,2,Moves).
 	
 %testing(Board):-final_board(Board),checkMateYellow(Board,_,_,_).
 
@@ -207,7 +207,7 @@ getAllElements([_|Rest],Y):-getAllElements(Rest,Y).
 
 getBestMove(Board,Player,CostLeft,Moves):-	listAllPossibleMoves(Board,Player,2,L),random_permutation(L,List),
 											write('Jogadas Iniciais Possiveis : '),length(List,N),write(N),nl,
-											evaluate_and_choose(List,Board,Player,(_,-10000),Moves),
+											evaluate_and_choose(List,Board,Player,3,1,(_,-10000),Moves),
 											statistics('runtime',Value), write('Tempo de execucao : '), write(Value),nl.
 
 %evaluate_and_choose  Based on the Art of Prolog predicate
@@ -234,6 +234,40 @@ evaluate_and_choose([X-Y-XF-YF-1 | ListMoves] ,Board, Player ,Record, BestMove):
 
 updateBestMove(_,Value,(Move1,Value1),(Move1,Value1)):- Value =< Value1.
 updateBestMove(Move,Value,(_,Value1),(Move,Value)):- Value > Value1.
+
+%minimax
+
+evaluate_and_choose([],_,_,(Move,Value),_,_,(Move,Value)).
+
+evaluate_and_choose([X-Y-XF-YF-0 | ListMoves] ,Board, Player, D, MaxMin,Record, BestMove):-
+				length(ListMoves,N),write(N),nl,
+				movePiece(Board,X,Y,XF,YF,NewBoard),
+				minimax(D,NewBoard,Player,MaxMin,X-Y-XF-YF-0,Value),
+				updateBestMove([X-Y-XF-YF-0], Value, Record, Record1),
+				((Value =:= 10000,evaluate_and_choose([],Board,Player, D, MaxMin,Record1,BestMove));
+				evaluate_and_choose(ListMoves,Board,Player, D, MaxMin,Record1,BestMove)).
+
+evaluate_and_choose([X-Y-XF-YF-1 | ListMoves] ,Board, Player, D, MaxMin,Record, BestMove):-
+				movePiece(Board,X,Y,XF,YF,NewBoard),
+				listAllPossibleMoves(NewBoard,Player,1,List2),
+				random_permutation(List2,List3),
+				evaluate_and_choose(List3,NewBoard,Player, D, MaxMin,(_,-10000),(BestMove2,BestValue)),
+				append([X-Y-XF-YF-1],BestMove2,Result),
+				updateBestMove(Result, BestValue, Record, Record2),
+				((BestValue =:= 10000,evaluate_and_choose([],Board,Player, D, MaxMin,Record2,BestMove));
+				evaluate_and_choose(ListMoves,Board,Player,Record2,BestMove)).
+				
+minimax(0,Board,Player,MaxMin,_,Value):-
+					write('Sai do MinMax\n'),
+					evaluateBoard(Board,Player,BoardValue), 
+					Value is BoardValue*MaxMin.
+minimax(D,Board,Player,MaxMin,X-Y-XF-YF-0,Value):-
+					write('Entra no minMax'),write(D),nl,
+					D > 0,
+					movePiece(Board,X,Y,XF,YF,NewBoard), listAllPossibleMoves(NewBoard,Player,2,List2), random_permutation(List2,List3),
+					D1 is D - 1,
+					MinMax is -MaxMin,
+					evaluate_and_choose(List3,NewBoard,Player,D1,MinMax,(_,-10000),(X-Y-XF-YF-0,Value)).
 
 %evaluateBoard(Board,Player,Value).
 
@@ -264,7 +298,7 @@ listAllPossibleMoves(Board,Player,CostLeft,List):-findall(X-Y-XF-YF-CostToSpend,
 %testMoves(Board,Player,CostLeft,XIndex,YIndex,XFIndex,YFIndex,CostToSpend). Tests if the Move can be done
 
 testMoves(Board,Player,CostLeft,XIndex,YIndex,XFIndex,YFIndex,CostToSpend):-	canUseThisPiece(Board,XIndex,YIndex,Player,CostLeft,NewCost),
-																				validMove(Board,XIndex,YIndex,XFIndex,YFIndex,Player,NewCost,CostToSpend),!.														
+																				validMove(Board,XIndex,YIndex,XFIndex,YFIndex,Player,NewCost,CostToSpend).														
 
 %allPossibleMoves(Board,Player,CostLeft,X,Y,XF,YF). Generate and Test random movements																			
 																				
