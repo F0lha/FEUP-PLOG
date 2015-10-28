@@ -96,12 +96,12 @@ diagonal(X,Y,XF,YF):-XT is X + 1, XB is X - 1,YT is Y + 1, YB is Y - 1,(
 %validMove(Board,X,Y,Player).
 
 validMove(Board,X,Y,XF,YF,Player,NewCost,NewestCost):-((getDiagonals(X,Y,XF,YF),playerCost(Board,XF,YF,Player2,_), Player2 =\= -1,Player=\=Player2,matrixGet(Board,X,Y,Value),((Value=:= 5, MoreValue is 0);(MoreValue is 1)));
-											(inLine(Board,X,Y,XF,YF), MoreValue is 0)),checkCost(NewCost,MoreValue,NewestCost).
+											(inLine(Board,X,Y,XF,YF), MoreValue is 0)),checkCost(NewCost,MoreValue,NewestCost),!.
 
 
 %continueGame(Board).
 
-continueGame(Board):- whereM(Board,_,_), \+(isOnEdge(Board)).
+continueGame(Board):- whereM(Board,_,_), \+(isOnEdge(Board)),!.
 
 %isOnEdge(Board).
 
@@ -145,7 +145,7 @@ whoPlays(Board,1,NewBoard,_,1,_,3):-playBestMove(Board,1,NewBoard,2).
 
 %canUseThisPiece(Board,X,Y,Player,CostLeft,NewCost).
 
-canUseThisPiece(Board,X,Y,Player,CostLeft,NewCost):-playerCost(Board,X,Y,RightPlayer,Diff),checkCost(CostLeft,Diff,NewCost),RightPlayer =:= Player.
+canUseThisPiece(Board,X,Y,Player,CostLeft,NewCost):-playerCost(Board,X,Y,RightPlayer,Diff),checkCost(CostLeft,Diff,NewCost),RightPlayer =:= Player,!.
 
 %chooseMove(Board,Player,NewBoard,CostLeft)
 
@@ -161,26 +161,36 @@ chooseMove(Board,Player,NewBoard,CostLeft):- write('Que peca deseja mover? Jogad
 										
 chooseMove(Board,Player,NewBoard,CostLeft):-write('Jogada Impossivel'),nl,nl,chooseMove(Board,Player,NewBoard,CostLeft),!.
 
-checkCost(CostLeft,Cost,NewCost):-Cost =< CostLeft, NewCost is (CostLeft-Cost).
+checkCost(CostLeft,Cost,NewCost):-Cost =< CostLeft, NewCost is (CostLeft-Cost),!.
 
-playerCost(Board,X,Y,0,1):- matrixGet(Board,X,Y,Value), Value =:= 2.
-playerCost(Board,X,Y,0,2):- matrixGet(Board,X,Y,Value), Value =:= 5.
-playerCost(Board,X,Y,1,1):- matrixGet(Board,X,Y,Value), Value =:= 1.
+playerCost(Board,X,Y,0,1):- matrixGet(Board,X,Y,Value), Value =:= 2,!.
+playerCost(Board,X,Y,0,2):- matrixGet(Board,X,Y,Value), Value =:= 5,!.
+playerCost(Board,X,Y,1,1):- matrixGet(Board,X,Y,Value), Value =:= 1,!.
 playerCost(_,_,_,-1,0).
 
 movePiece(Board,X,Y,XF,YF,NewBoard):-matrixGet(Board,X,Y,Value),defineSpace(Board,X,Y,0,TempBoard),defineSpace(TempBoard,XF,YF,Value,NewBoard).
 
 
 
-defineSpace([],_,_,_,[]).
+%setList(List,Index,Value,NewList).
 
-defineSpace([_|Rest],1,0,NewValue,NewBoard):-append([NewValue],Rest,NewBoard).
+setList([_|Rest],1,Value,[Value|Rest]):-!.
 
-defineSpace([H|Rest],X,0,NewValue,NewBoard):- X2 is X - 1, defineSpace(Rest,X2,0,NewValue,NewBoard2),append([H],NewBoard2,NewBoard).
+setList([X|Rest],Index,Value,[X|NewRest]):- NewIndex is Index - 1,setList(Rest,NewIndex,Value,NewRest).
 
-defineSpace([H|Rest], X, Y, NewValue, NewBoard):- X > 0, Y2 is Y -1, Y2 =:= 0, defineSpace(H,X,Y2,NewValue,NewBoard2),append([NewBoard2],Rest,NewBoard).
+%defineSpace(Board,X,Y,Value,NewBoard).
 
-defineSpace([H|Rest], X, Y, NewValue, NewBoard):- X > 0, Y2 is Y-1,defineSpace(Rest,X,Y2,NewValue,NewBoard2),append([H],NewBoard2,NewBoard).
+defineSpace(Board,X,Y,Value,NewBoard):-getLine(Board,Y,Line),setList(Line,X,Value,NewLine),setList(Board,Y,NewLine,NewBoard),!.
+
+%defineSpace([],_,_,_,[]).
+
+%defineSpace([_|Rest],1,0,NewValue,NewBoard):-append([NewValue],Rest,NewBoard).
+
+%defineSpace([H|Rest],X,0,NewValue,NewBoard):- X2 is X - 1, defineSpace(Rest,X2,0,NewValue,NewBoard2),append([H],NewBoard2,NewBoard).
+
+%defineSpace([H|Rest], X, Y, NewValue, NewBoard):- X > 0, Y2 is Y -1, Y2 =:= 0, defineSpace(H,X,Y2,NewValue,NewBoard2),append([NewBoard2],Rest,NewBoard).
+
+%defineSpace([H|Rest], X, Y, NewValue, NewBoard):- X > 0, Y2 is Y-1,defineSpace(Rest,X,Y2,NewValue,NewBoard2),append([H],NewBoard2,NewBoard).
 
 
 %%%%%%%%%%%%%%%%%%%%% FUNCOES AUXILIARES   %%%%%%%%%%%%%%%%%%%%%%%%%
@@ -226,7 +236,8 @@ evaluate_and_choose([X-Y-XF-YF-0 | ListMoves] ,Board, Player ,Record, BestMove):
 evaluate_and_choose([X-Y-XF-YF-1 | ListMoves] ,Board, Player ,Record, BestMove):-
 				movePiece(Board,X,Y,XF,YF,NewBoard),
 				listAllPossibleMoves(NewBoard,Player,1,List2),
-				evaluate_and_choose(List2,NewBoard,Player,(_,-10000),(BestMove2,BestValue)),
+				random_permutation(List2,List3),
+				evaluate_and_choose(List3,NewBoard,Player,(_,-10000),(BestMove2,BestValue)),
 				append([X-Y-XF-YF-1],BestMove2,Result),
 				updateBestMove(Result, BestValue, Record, Record2),
 				((BestValue =:= 10000,evaluate_and_choose([],Board,Player,Record2,BestMove));
@@ -240,15 +251,15 @@ updateBestMove(Move,Value,(_,Value1),(Move,Value)):- Value > Value1.
 %evaluateBoard(Board,Player,Value).
 
 
-evaluateBoard(Board,_,Value):- 	\+(continueGame(Board)),Value is 10000.
-evaluateBoard(Board,0,Value):-	numberOfCheckMateGray(Board,N),Value is -1500*N.
-evaluateBoard(Board,0,Value):-	numberOfCheckMateYellow(Board,N),\+ (checkMateGray(Board,_,_,_,_)),Value is 1500*N.
-evaluateBoard(Board,1,Value):-	numberOfCheckMateYellow(Board,N),Value is -1500*N.
-evaluateBoard(Board,1,Value):-	numberOfCheckMateGray(Board,N),\+ (checkMateYellow(Board,_,_,_,_)),Value is 1500*N.
+evaluateBoard(Board,_,Value):- 	\+(continueGame(Board)),Value is 10000,!.
+evaluateBoard(Board,0,Value):-	numberOfCheckMateGray(Board,N),Value is -1500*N,!.
+evaluateBoard(Board,0,Value):-	numberOfCheckMateYellow(Board,N),\+ (checkMateGray(Board,_,_,_,_)),Value is 1500*N,!.
+evaluateBoard(Board,1,Value):-	numberOfCheckMateYellow(Board,N),Value is -1500*N,!.
+evaluateBoard(Board,1,Value):-	numberOfCheckMateGray(Board,N),\+ (checkMateYellow(Board,_,_,_,_)),Value is 1500*N,!.
 evaluateBoard(Board,0,Value):-	motherShipPositionValue(Board,MValue),getNShips(Board,0,NPlayer),
-								getNShips(Board,1,NPlayer1),Value is (MValue+NPlayer-NPlayer1).
+								getNShips(Board,1,NPlayer1),Value is (MValue+NPlayer-NPlayer1),!.
 evaluateBoard(Board,1,Value):-	getNShips(Board,1,NPlayer),
-								getNShips(Board,0,NPlayer1),Value is (NPlayer-NPlayer1).
+								getNShips(Board,0,NPlayer1),Value is (NPlayer-NPlayer1),!.
 
 %getNShips(Board,Player,N).
 
@@ -281,7 +292,7 @@ listAllPossibleMoves(Board,Player,CostLeft,List):-findall(X-Y-XF-YF-CostToSpend,
 %testMoves(Board,Player,CostLeft,XIndex,YIndex,XFIndex,YFIndex,CostToSpend). Tests if the Move can be done
 
 testMoves(Board,Player,CostLeft,XIndex,YIndex,XFIndex,YFIndex,CostToSpend):-	canUseThisPiece(Board,XIndex,YIndex,Player,CostLeft,NewCost),
-																				validMove(Board,XIndex,YIndex,XFIndex,YFIndex,Player,NewCost,CostToSpend).														
+																				validMove(Board,XIndex,YIndex,XFIndex,YFIndex,Player,NewCost,CostToSpend),!.														
 
 %allPossibleMoves(Board,Player,CostLeft,X,Y,XF,YF). Generate and Test random movements																			
 																				
@@ -332,17 +343,17 @@ playRandomMoveWithEnd(Board,Player,NewBoard,CostLeft):-playRandomMove(Board,Play
 
 applyMoves([],Board,_,Board).
 
-applyMoves([X-Y-XF-YF-_|Rest],Board,Player,NewBoard):-		movePiece(Board,X,Y,XF,YF,NewBoard2),
-															printBestBotPlay(Player,X,Y,XF,YF),nl,
-															printTable(NewBoard2,XF,YF),
-															applyMoves(Rest,NewBoard2,Player,NewBoard).
+applyMoves([X-Y-XF-YF-_|Rest],Board,Player,NewBoard):-	movePiece(Board,X,Y,XF,YF,NewBoard2),
+														printBestBotPlay(Player,X,Y,XF,YF),nl,
+														printTable(NewBoard2,XF,YF),
+														applyMoves(Rest,NewBoard2,Player,NewBoard).
 
 	
 %playBestMove(Board,Player,NewBoard,CostLeft).	
 	
 	
 playBestMove(Board,Player,NewBoard,CostLeft):-	getBestMove(Board,Player,CostLeft,(Moves,_)),
-												applyMoves(Moves,Board,Player,NewBoard).
+												applyMoves(Moves,Board,Player,NewBoard),!.
 												
 
 												
