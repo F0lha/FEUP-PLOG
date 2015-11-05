@@ -20,23 +20,6 @@ initial_board(
 	[0,0,0,1,1,1,1,1,0,0,0],
 	[0,0,0,0,0,0,0,0,0,0,0]]).
 	
-	final_board(
-	[[2,0,0,0,0,0,0,0,0,1,0],
-	[0,0,0,1,0,0,0,0,0,5,0],
-	[0,0,2,0,0,2,0,0,0,1,0],
-	[0,0,0,0,0,0,0,0,0,2,0],	
-	[0,0,0,0,0,0,0,0,0,0,0],
-	[0,0,0,0,0,0,0,0,0,0,2],	
-	[0,0,0,2,0,0,0,2,0,0,0],
-	[0,0,0,0,0,0,0,0,0,0,0],
-	[0,0,0,0,0,0,0,0,0,0,0],
-	[0,0,0,0,0,0,0,0,0,0,0],
-	[0,0,0,0,0,0,0,0,0,0,0]]).
-
-testing(L):-initial_board(Board), getNShips(Board,1,L).
-	
-%testing(Board):-final_board(Board),checkMateYellow(Board,_,_,_).
-
 %%%% MENUS %%%%
 
 playMenu:-nl,
@@ -57,8 +40,8 @@ playMenuAnswer(_):-write('Wrong Input'),nl,nl,!,playMenu.
 
 menu:- nl, write('Bem Vindo ao BreakThru'),nl,
 nl,
-write('1 - Jogar '),nl,
-write('2 - Creditos '),nl,
+write('1 - Play '),nl,
+write('2 - Credits '),nl,
 write('3 - Exit '),nl,
 read(Answer), menuAnswer(Answer).
 
@@ -67,7 +50,7 @@ menuAnswer(2):-credits,!,menu.
 menuAnswer(3):-!.
 menuAnswer(_):-write('Wrong Input'),nl,nl,!,menu.
 
-credits:-nl, write('Jogo feito por Joao Baiao e Pedro Castro'),nl, nl.
+credits:-nl, write('Game made by Joao Baiao and Pedro Castro'),nl, nl.
 
 %%%%%%%%%%%%%%%%%%% Validacao de Jogadas %%%%%%%%%%%%%%%%%%%%%%%
 
@@ -109,8 +92,8 @@ isOnEdge(Board):-between(1,11,Index),((matrixGet(Board,Index,1,Value),Value=:=5,
 %%%%%%%%%%%%%%%%%% Movimentação de Peças %%%%%%%%%%%%%%%%%%%%%%%%
 
 %chooseBotDifficulty(Dif,N).
-chooseBotDifficulty(Dif,0):-nl,write('Choose Difficulty for Yellow Bot :'),nl,write('1 - Random'),nl,write('2 - Random with CheckMate'),nl,write('3 - Hard'),nl, read(Dif),(Dif=:=1;Dif=:=2;Dif=:=3).
-chooseBotDifficulty(Dif,1):-nl,write('Choose Difficulty for Gray Bot :'),nl,write('1 - Random'),nl,write('2 - Random with CheckMate'),nl,write('3 - Hard'),nl, read(Dif),(Dif=:=1;Dif=:=2;Dif=:=3).
+chooseBotDifficulty(Dif,0):-nl,write('Choose Difficulty for Yellow Bot :'),nl,write('1 - Random'),nl,write('2 - Random with CheckMate'),nl,write('3 - Hard'),nl,write('4 - Hardest (Dev Mode)'),nl, read(Dif),(Dif=:=1;Dif=:=2;Dif=:=3;Dif=:=4).
+chooseBotDifficulty(Dif,1):-nl,write('Choose Difficulty for Gray Bot :'),nl,write('1 - Random'),nl,write('2 - Random with CheckMate'),nl,write('3 - Hard'),nl,write('4 - Hardest (Dev Mode)'),nl, read(Dif),(Dif=:=1;Dif=:=2;Dif=:=3;Dif=:=4).
 chooseBotDifficulty(Dif,N):-write('Input error, Try again'),nl,chooseBotDifficulty(Dif,N).
 
 %playFirst(Board,Robot,Robot).
@@ -120,15 +103,15 @@ playFirst(Board,0,1):-chooseBotDifficulty(Dif,1),printTable(Board,0,0),play(Boar
 playFirst(Board,1,0):-chooseBotDifficulty(Dif,0),play(Board,0,1,0,Dif,0).
 playFirst(Board,1,1):-chooseBotDifficulty(Dif1,0),chooseBotDifficulty(Dif2,1),play(Board,0,1,1,Dif1,Dif2).
 
-%play(Board,CurrPlayer,Bot1,Bot2,Level1,Level2). TODO play(Board,CurrPlayer,Bot1,Bot2,Level) TODO Level
+%play(Board,CurrPlayer,Bot1,Bot2,Level1,Level2). 
 
 play(Board,0,Bot1,Bot2,Level1,Level2):-continueGame(Board), whoPlays(Board,0,NewBoard,Bot1,Bot2,Level1,Level2),!,play(NewBoard,1,Bot1,Bot2,Level1,Level2).
 play(Board,1,Bot1,Bot2,Level1,Level2):-continueGame(Board), whoPlays(Board,1,NewBoard,Bot1,Bot2,Level1,Level2),!,play(NewBoard,0,Bot1,Bot2,Level1,Level2).
 
-play(_,0,_,_,_,_):-write('Jogador Cinzento ganhou!').
-play(_,1,_,_,_,_):-write('Jogador Amarelo ganhou!').
+play(_,0,_,_,_,_):-write('Gray Player Won!'),nl.
+play(_,1,_,_,_,_):-write('Yellow Player Won!'),nl.
 
-%whoPlays(Board,Player,NewBoard,Bot1,Bot2,Level1,Level2). TODO LEVEL
+%whoPlays(Board,Player,NewBoard,Bot1,Bot2,Level1,Level2).
 
 whoPlays(Board,0,NewBoard,0,_,_,_):-chooseMove(Board,0,NewBoard,2).
 whoPlays(Board,1,NewBoard,_,0,_,_):-chooseMove(Board,1,NewBoard,2).
@@ -136,8 +119,10 @@ whoPlays(Board,0,NewBoard,1,_,1,_):-playRandomMove(Board,0,NewBoard,2).
 whoPlays(Board,1,NewBoard,_,1,_,1):-playRandomMove(Board,1,NewBoard,2).
 whoPlays(Board,0,NewBoard,1,_,2,_):-playRandomMoveWithEnd(Board,0,NewBoard,2).
 whoPlays(Board,1,NewBoard,_,1,_,2):-playRandomMoveWithEnd(Board,1,NewBoard,2).
-whoPlays(Board,0,NewBoard,1,_,3,_):-playBestMove(Board,0,NewBoard).
-whoPlays(Board,1,NewBoard,_,1,_,3):-playBestMove(Board,1,NewBoard).
+whoPlays(Board,0,NewBoard,1,_,3,_):-playBestMove(Board,0,NewBoard,2).
+whoPlays(Board,1,NewBoard,_,1,_,3):-playBestMove(Board,1,NewBoard,2).
+whoPlays(Board,0,NewBoard,1,_,4,_):-playBestMoveUpdated(Board,0,NewBoard).
+whoPlays(Board,1,NewBoard,_,1,_,4):-playBestMoveUpdated(Board,1,NewBoard).
 
 %canUseThisPiece(Board,X,Y,Player,CostLeft,NewCost).
 
@@ -146,7 +131,7 @@ canUseThisPiece(Board,X,Y,Player,CostLeft,NewCost):-playerCost(Board,X,Y,RightPl
 %chooseMove(Board,Player,NewBoard,CostLeft)
 
 chooseMove(Board,_,Board,0).
-chooseMove(Board,Player,NewBoard,CostLeft):- write('Que peca deseja mover? Jogador '),((Player =:= 0, write('Amarelo'));(Player =:= 1,write('Cinzento'))),write(' com '),write(CostLeft),write(' Jogadas:')
+chooseMove(Board,Player,NewBoard,CostLeft):- write('What piece do you want to move? Jogador '),((Player =:= 0, write('Yellow'));(Player =:= 1,write('Gray'))),write(' with '),write(CostLeft),write(' Plays:')
 										,nl,write('X = '), read(X),nl, write('Y = '), read(Y),nl,
 										canUseThisPiece(Board,X,Y,Player,CostLeft,NewCost),
 										write('New X = '), read(XF),nl, write('New Y = '),read(YF),nl,
@@ -155,7 +140,7 @@ chooseMove(Board,Player,NewBoard,CostLeft):- write('Que peca deseja mover? Jogad
 										printTable(NewBoard2,XF,YF),
 										chooseMove(NewBoard2,Player,NewBoard,NewestCost),!.
 										
-chooseMove(Board,Player,NewBoard,CostLeft):-write('Jogada Impossivel'),nl,nl,chooseMove(Board,Player,NewBoard,CostLeft),!.
+chooseMove(Board,Player,NewBoard,CostLeft):-write('Impossivle Play'),nl,nl,chooseMove(Board,Player,NewBoard,CostLeft),!.
 
 checkCost(CostLeft,Cost,NewCost):-Cost =< CostLeft, NewCost is (CostLeft-Cost),!.
 
@@ -195,31 +180,47 @@ matrixGet(Board,X,Y,Value):-nth1(Y,Board,List),nth1(X,List,Value).
 
 %getBestMove(Board,Player,X,Y,YF,CostToSpend).
 
-getBestMove(Board,Player,Moves):-	listAllPossibleMoves(Board,Player,2,L),random_permutation(L,List),
-											write('Jogadas Iniciais Possiveis : '),length(List,N),write(N),nl,
-											evaluate_and_choose(List,Board,Player,(_,-10000),Moves),
-											statistics('runtime',Value), write('Tempo de execucao : '), write(Value),nl.
+getBestMove(Board,Player,X,Y,XF,YF,CostLeft,CostToSpend):-listAllPossibleMoves(Board,Player,CostLeft,L),random_permutation(L,List),evaluate_and_choose(List,Board,Player,(_,-10000),X-Y-XF-YF-CostToSpend).
 
-%evaluate_and_choose  Based on the Art of Prolog predicate
+%evaluate_and_choose  Based on the Art of Prolog original predicate
 
-evaluate_and_choose([],_,_,(Move,Value),(Move,Value)):-!.
+evaluate_and_choose([],_,_,(Move,_),Move).
 
-evaluate_and_choose([X-Y-XF-YF-0 | ListMoves] ,Board, Player ,Record, BestMove):-
+evaluate_and_choose([X-Y-XF-YF-CostToSpend | ListMoves] ,Board, Player ,Record, BestMove):-
+				movePiece(Board,X,Y,XF,YF,NewBoard),
+				evaluateBoard(NewBoard,Player,Value),
+				updateBestMove(X-Y-XF-YF-CostToSpend, Value, Record, Record1),
+				evaluate_and_choose(ListMoves,Board,Player,Record1,BestMove).
+
+
+%getBestMoveUpdated(Board,Player,X,Y,YF,CostToSpend).
+
+getBestMoveUpdated(Board,Player,Moves):-	listAllPossibleMoves(Board,Player,2,L),random_permutation(L,List),
+											write('Number of Possible Plays : '),length(List,N),write(N),nl,
+											evaluate_and_chooseUpdated(List,Board,Player,(_,-10000),Moves),
+											statistics('runtime',Value), write('RunTime : '), write(Value),nl.
+
+%evaluate_and_chooseUpdated  Based on the Art of Prolog predicate with a minor change that allows the bot to see a play ahead of its own because
+%						in one turn two moves can be made. With this change the bot is able to make a play knowing he can make two moves.
+
+evaluate_and_chooseUpdated([],_,_,(Move,Value),(Move,Value)):-!.
+
+evaluate_and_chooseUpdated([X-Y-XF-YF-0 | ListMoves] ,Board, Player ,Record, BestMove):-
 				movePiece(Board,X,Y,XF,YF,NewBoard),
 				evaluateBoard(NewBoard,Player,Value),
 				updateBestMove([X-Y-XF-YF-0], Value, Record, Record1),
-				((Value =:= 10000,evaluate_and_choose([],Board,Player,Record1,BestMove),!);
-				evaluate_and_choose(ListMoves,Board,Player,Record1,BestMove)).
+				((Value =:= 10000,evaluate_and_chooseUpdated([],Board,Player,Record1,BestMove),!);
+				evaluate_and_chooseUpdated(ListMoves,Board,Player,Record1,BestMove)).
 
-evaluate_and_choose([X-Y-XF-YF-1 | ListMoves] ,Board, Player ,Record, BestMove):-
+evaluate_and_chooseUpdated([X-Y-XF-YF-1 | ListMoves] ,Board, Player ,Record, BestMove):-
 				movePiece(Board,X,Y,XF,YF,NewBoard),
 				listAllPossibleMoves(NewBoard,Player,1,List2),
 				random_permutation(List2,List3),
-				evaluate_and_choose(List3,NewBoard,Player,(_,-10000),(BestMove2,BestValue)),
+				evaluate_and_chooseUpdated(List3,NewBoard,Player,(_,-10000),(BestMove2,BestValue)),
 				append([X-Y-XF-YF-1],BestMove2,Result),
 				updateBestMove(Result, BestValue, Record, Record2),
-				((BestValue =:= 10000,evaluate_and_choose([],Board,Player,Record2,BestMove),!);
-				evaluate_and_choose(ListMoves,Board,Player,Record2,BestMove)).
+				((BestValue =:= 10000,evaluate_and_chooseUpdated([],Board,Player,Record2,BestMove),!);
+				evaluate_and_chooseUpdated(ListMoves,Board,Player,Record2,BestMove)).
 
 updateBestMove(_,Value,(Move1,Value1),(Move1,Value1)):- Value =< Value1.
 updateBestMove(Move,Value,(_,Value1),(Move,Value)):- Value > Value1.
@@ -308,9 +309,18 @@ applyMoves([X-Y-XF-YF-_|Rest],Board,Player,NewBoard):-	movePiece(Board,X,Y,XF,YF
 														printTable(NewBoard2,XF,YF),
 														applyMoves(Rest,NewBoard2,Player,NewBoard).
 
-%playBestMove(Board,Player,NewBoard).	
+%playBestMove(Board,Player,NewBoard,CostLeft).	
+	
+playBestMove(Board,_,Board,0).
+	
+playBestMove(Board,Player,NewBoard,CostLeft):-	getBestMove(Board,Player,X,Y,XF,YF,CostLeft,CostToSpend),movePiece(Board,X,Y,XF,YF,NewBoard2),
+												printBestBotPlay(Player,X,Y,XF,YF),nl,
+												printTable(NewBoard2,XF,YF),
+												playBestMove(NewBoard2,Player,NewBoard,CostToSpend).														
+														
+%playBestMoveUpdated(Board,Player,NewBoard).	
 
-playBestMove(Board,Player,NewBoard):-	getBestMove(Board,Player,(Moves,_)),
+playBestMoveUpdated(Board,Player,NewBoard):-	getBestMoveUpdated(Board,Player,(Moves,_)),
 												applyMoves(Moves,Board,Player,NewBoard),!.
 											
 %numberOfCheckMateYellow(Board,N).
