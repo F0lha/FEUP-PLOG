@@ -20,6 +20,8 @@ initial_board(
 	[0,0,0,1,1,1,1,1,0,0,0],
 	[0,0,0,0,0,0,0,0,0,0,0]]).
 	
+:-initialization(menu).
+	
 %%%% MENUS %%%%
 
 playMenu:-nl,
@@ -52,7 +54,7 @@ menuAnswer(_):-write('Wrong Input'),nl,nl,!,menu.
 
 credits:-nl, write('Game made by Joao Baiao and Pedro Castro'),nl, nl.
 
-%%%%%%%%%%%%%%%%%%% Validacao de Jogadas %%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%% Play Validation %%%%%%%%%%%%%%%%%%%%%%%
 
 %inLine(Board,X,Y,XF,YF).
 
@@ -73,23 +75,20 @@ diagonal(X,Y,XF,YF):-XT is X + 1, XB is X - 1,YT is Y + 1, YB is Y - 1,(
 					(XT < 12,YB > 0,XF is XT, YF is YB);
 					(XB > 0,YB > 0,XF is XB, YF is YB)).
 
-%validMove(Board,X,Y,Player).
+%validMove(Board,X,Y,XF,YF,Player,Cost,NewCost).
 
-validMove(Board,X,Y,XF,YF,Player,NewCost,NewestCost):-((getDiagonals(X,Y,XF,YF),playerCost(Board,XF,YF,Player2,_), Player2 =\= -1,Player=\=Player2,matrixGet(Board,X,Y,Value),((Value=:= 5, MoreValue is 0);(MoreValue is 1)));
-											(inLine(Board,X,Y,XF,YF), MoreValue is 0)),checkCost(NewCost,MoreValue,NewestCost),!.
+validMove(Board,X,Y,XF,YF,Player,Cost,NewCost):-((getDiagonals(X,Y,XF,YF),playerCost(Board,XF,YF,Player2,_), Player2 =\= -1,Player=\=Player2,matrixGet(Board,X,Y,Value),((Value=:= 5, MoreValue is 0);(MoreValue is 1)));
+											(inLine(Board,X,Y,XF,YF), MoreValue is 0)),checkCost(Cost,MoreValue,NewCost),!.
 
 %continueGame(Board).
 
 continueGame(Board):- whereM(Board,_,_), \+(isOnEdge(Board)),!.
 
-%isOnEdge(Board).
+%isOnEdge(Board). Checks if the MotherBoard is at the edge of the board
 
-isOnEdge(Board):-between(1,11,Index),((matrixGet(Board,Index,1,Value),Value=:=5,!);
-										(matrixGet(Board,Index,11,Value),Value=:=5,!);
-										(matrixGet(Board,1,Index,Value),Value=:=5,!);
-										(matrixGet(Board,11,Index,Value),Value=:=5,!)).
+isOnEdge(Board):-whereM(Board,X,Y),((X =:= 1);(X=:=11);(Y=:=1);(Y=:=11)).
 
-%%%%%%%%%%%%%%%%%% Movimentação de Peças %%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%% Piece Movement %%%%%%%%%%%%%%%%%%%%%%%%
 
 %chooseBotDifficulty(Dif,N).
 chooseBotDifficulty(Dif,0):-nl,write('Choose Difficulty for Yellow Bot :'),nl,write('1 - Random'),nl,write('2 - Random with CheckMate'),nl,write('3 - Hard'),nl,write('4 - Hardest (Dev Mode)'),nl, read(Dif),(Dif=:=1;Dif=:=2;Dif=:=3;Dif=:=4).
@@ -151,7 +150,7 @@ playerCost(_,_,_,-1,0).
 
 movePiece(Board,X,Y,XF,YF,NewBoard):-matrixGet(Board,X,Y,Value),defineSpace(Board,X,Y,0,TempBoard),defineSpace(TempBoard,XF,YF,Value,NewBoard).
 
-%setList(List,Index,Value,NewList).
+%setList(List,Index,Value,NewList). 
 
 setList([_|Rest],1,Value,[Value|Rest]):-!.
 
@@ -161,7 +160,7 @@ setList([X|Rest],Index,Value,[X|NewRest]):- NewIndex is Index - 1,setList(Rest,N
 
 defineSpace(Board,X,Y,Value,NewBoard):-getLine(Board,Y,Line),setList(Line,X,Value,NewLine),setList(Board,Y,NewLine,NewBoard),!.
 
-%%%%%%%%%%%%%%%%%%%%% FUNCOES AUXILIARES   %%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%% Aux Functions   %%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 %whereM(Board,X,Y).

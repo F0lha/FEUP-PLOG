@@ -28,3 +28,11 @@ findElem(Elem,[X|Rest]):- is_list([X|Rest]),findElem(Elem,Rest).
 a(1,2).
 
 %mais_proximos(+Idade,-ListaProximos).
+
+daCartas(Cartas,[],Cartas,0).
+
+daCartas([Cab|Cartas], [Cab|Mao1], Resto, Contador):-
+	Contador1 is Contador - 1, daCartas(Cartas,Mao1,Resto,Contador1).
+	
+deleteFromList([Element|List],Element,List).
+deleteFromList([H|List],Element,[H|NewList]):-deleteFromList(List,Element,NewList).
