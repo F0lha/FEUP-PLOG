@@ -1,6 +1,7 @@
 
 
 :-use_module(library(lists)).
+:-use_module(library(between)).
 :-use_module(library(random)).
 
 %%% Jogador Amarelo = 0 %%%
@@ -39,7 +40,7 @@ playMenuAnswer(4):-initial_board(Board), playFirst(Board,1,1),!,menu.
 playMenuAnswer(5):-!,menu.
 playMenuAnswer(_):-write('Wrong Input'),nl,nl,!,playMenu.
 
-menu:- nl, write('Bem Vindo ao BreakThru'),nl,
+menu:- nl, write('Welcome to BreakThru'),nl,
 nl,
 write('1 - Play '),nl,
 write('2 - Credits '),nl,

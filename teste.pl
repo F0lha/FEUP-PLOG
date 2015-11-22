@@ -1,3 +1,5 @@
+
+:-use_module(library(clpfd)).
 :- use_module(library(lists)).
 
 factorial(1, 1).
@@ -36,3 +38,5 @@ daCartas([Cab|Cartas], [Cab|Mao1], Resto, Contador):-
 	
 deleteFromList([Element|List],Element,List).
 deleteFromList([H|List],Element,[H|NewList]):-deleteFromList(List,Element,NewList).
+
+
