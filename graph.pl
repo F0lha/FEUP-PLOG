@@ -5,15 +5,18 @@
 edge(n1,n2).
 edge(n1,n3).
 edge(n1,n5).
+edge(n1,n7).
 
 edge(n2,n4).
 edge(n2,n5).
+edge(n2,n6).
 
 edge(n3,n7).
 edge(n3,n9).
 
 edge(n4,n6).
 edge(n4,n8).
+edge(n4,n11).
 
 edge(n5,n6).
 edge(n5,n7).
@@ -63,6 +66,7 @@ edge(n18,n20).
 edge(n18,n21).
 edge(n18,n25).
 
+edge(n19,n20).
 edge(n19,n22).
 edge(n19,n23).
 edge(n19,n24).
@@ -112,15 +116,18 @@ edge(n32,n33).
 edge(n34,n35).
 edge(n34,n36).
 edge(n34,n38).
+edge(n34,n40).
 
 edge(n35,n37).
 edge(n35,n38).
+edge(n35,n39).
 
 edge(n36,n40).
 edge(n36,n42).
 
 edge(n37,n39).
 edge(n37,n41).
+edge(n37,n44).
 
 edge(n38,n39).
 edge(n38,n40).
@@ -170,6 +177,7 @@ edge(n51,n53).
 edge(n51,n54).
 edge(n51,n58).
 
+edge(n52,n53).
 edge(n52,n55).
 edge(n52,n56).
 edge(n52,n57).
@@ -216,7 +224,9 @@ edge(n65,n66).
 
 %Restrictions to this graph
 
-listWheels([(n2,n35), (n14,n46), (n21,n55), (n22,n54), (n29,n62)]).
-listWheels([(n3,n37), (n4,n36), (n13,n47), (n32,n65)]).
-listColorsNumber([0,1,2,3,4,5]).
-listColorsNumber([2,0,1,3,4,5]).
+%There must exist one list of Colours of each list wheels
+
+:-assertz(listWheels([(n2,n35), (n14,n46), (n21,n55), (n22,n54), (n29,n62)])).
+:-assertz(listWheels([(n3,n37), (n4,n36), (n13,n47), (n32,n65)])).
+:-assertz(listColorsNumber([0,1,2,3,4,5])).
+:-assertz(listColorsNumber([2,0,1,3,4,5])).

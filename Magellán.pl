@@ -4,9 +4,12 @@
 :- use_module(library(clpfd)).
 :- use_module(library(aggregate)).
 
-%There must exist one list of Colours of each list wheels
+:-dynamic(listWheels/1).
+:-dynamic(listColorsNumber/1).
 
-listColors([white, blue, green, black, red, yellow]).
+
+
+listColors([white, blue, green, yellow, red, black]).
 
 
 :-[graph].
@@ -36,8 +39,10 @@ makeListNSize([H|Rest],N,[H|NewRest]):-N1 is N - 1, makeListNSize(Rest,N1,NewRes
 
 %%%%%%%%%%%%%%%%%%
 
+%Restricts the puzzle acording to the joint wheels given
+
 restrictDoubleWheelsAux(ListNodes,List,ListColor,(Node1,Node2)):-getColorOfNodes(ListNodes,List,Node1,Node2,Col1,Col2),
-																nth0(IndexCor,ListColor,Col1),IndexCorCorrected is mod((IndexCor+3),6),
+																nth0(IndexCol,ListColor,Col1),IndexCorCorrected is mod((IndexCol+3),6),
 																nth0(IndexCorCorrected,ListColor,Col), Col #= Col2.
 
 restrictDoubleWheels(ListNodes,List):-findall(X,listWheels(X),ListWheels),findall(X,listColorsNumber(X),ListColors),length(ListWheels,NWheels),
@@ -46,11 +51,14 @@ restrictDoubleWheels(ListNodes,List):-findall(X,listWheels(X),ListWheels),findal
 restrictDoubleWheels(ListNodes,List,Index,ListWheels,ListColors):-	nth1(Index,ListWheels,ListWheels1),nth1(Index,ListColors,ListColors1),
 																	foreach(member(Wheel1,ListWheels1),restrictDoubleWheelsAux(ListNodes,List,ListColors1,Wheel1)).
 
+%Enables to print the colour name
 
+printColour(Col):-listColors(ListColors),nth0(Col,ListColors,Term), print(Term).																	
+																	
 %Print Relation between 2 Nodes
-printRelation(ListNode,List,Node,SecondNode,Index):-nth1(Index2,ListNode,SecondNode),nth1(Index,List,Cor1),nth1(Index2,List,Cor2), print('The node '), print(Node), print(' - '), print(Cor1), print( ' connected to '),  print(SecondNode), print(' - '), print(Cor2),nl.
+printRelation(ListNode,List,Node,SecondNode,Index):-nth1(Index2,ListNode,SecondNode),nth1(Index,List,Cor1),nth1(Index2,List,Cor2), print('The node '), print(Node), print(' - '), printColour(Cor1), print( ' connected to '),  print(SecondNode), print(' - '), printColour(Cor2),nl.
 
-printColorsAux(ListNodes,List,Index):-nth1(Index,ListNodes,Node),nth1(Index,List,Cor1),print('Node -> '), print(Node),print(' - Colour -> '), print(Cor1),nl.
+printColorsAux(ListNodes,List,Index):-nth1(Index,ListNodes,Node),nth1(Index,List,Cor1),print('Node -> '), print(Node),print(' - Colour -> '), printColour(Cor1),nl.
 
 %Print Node Colors
 
@@ -63,10 +71,6 @@ printNode(ListNodes,List,Index):-nth1(Index,ListNodes,Node),findall(Y,edge(Node,
 %Print colored Graph
 
 printGraph(ListNodes,List):-length(ListNodes,Size),foreach(between(1,Size,Index),printNode(ListNodes,List,Index)).
-
-%Resests colour of node
-
-resetNodeColour(Node):-Term=..[Node,_],retract(Term).
 
 %Create List with only Variables not initialized
 
@@ -86,7 +90,7 @@ restrictTwoNodes(ListNodes,List,Node,SecondNode):- getColorOfNodes(ListNodes,Lis
 																			
 %Restrict Color of a Node
 
-restrictColorsOfNode(ListNodes,List,Node):-findall(Y,edge(Node,Y),L1),findall(Y,edge(Y,Node),L2),append(L1,L2,L),foreach(member(SecondNode,L),restrictTwoNodes(ListNodes,List,Node,SecondNode)).
+restrictColorsOfNode(ListNodes,List,Node):-findall(Y,edge(Node,Y),L1),findall(Y,edge(Y,Node),L2),append(L1,L2,Ls),removeDups(Ls,L),foreach(member(SecondNode,L),restrictTwoNodes(ListNodes,List,Node,SecondNode)).
 
 %Restrict the graph for having different values for adjacent nodes
 
@@ -94,6 +98,8 @@ restrictColorsOfGraph(ListNodes,List):-foreach(member(Node,ListNodes),restrictCo
 
 
 menu:- nl, write('WELCOME TO MAGELLAN'),nl,
+assertz(listWheels([])),
+assertz(listColorsNumber([])),
 nl,
 write('1 - Original Puzzle '),nl,
 write('2 - Credits '),nl,
@@ -110,8 +116,9 @@ credits:-nl, write('Puzzle implementation made by Joao Baiao and Pedro Castro'),
 originalMenu:-write('Its Not Possible To Fill the Puzzle with that amount of Different Colours'),nl.
 		
 originalGame(N):-listAllNodes(ListNodes),createEmptyListNodeSized(ListNodes,List),domain(List,0,5),nvalue(N,List),
-				restrictColorsOfGraph(ListNodes,List),restrictDoubleWheels(ListNodes,List),labeling([],List),
+				restrictColorsOfGraph(ListNodes,List),restrictDoubleWheels(ListNodes,List),nth0(12,List,Cor), Cor#=0,nth0(0,List,Cor), Cor#=0, labeling([],List),
 				printGraph(ListNodes,List),nl,
-				print('Puzzle Completed with '),print(N), print(' different colours!\n'),nl.
+				print('Puzzle Completed with '),print(N), print(' different colours!\n'),nl,
+				fd_statistics,nl.
 				
 originalGame(N):-!,print('Impossible to complete the puzzle with '), print(N), print(' different colours!\n'),N1 is N+1,originalGame(N1).
