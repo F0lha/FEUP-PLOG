@@ -213,3 +213,10 @@ edge(n63,n66).
 edge(n64,n65).
 
 edge(n65,n66).
+
+%Restrictions to this graph
+
+listWheels([(n2,n35), (n14,n46), (n21,n55), (n22,n54), (n29,n62)]).
+listWheels([(n3,n37), (n4,n36), (n13,n47), (n32,n65)]).
+listColorsNumber([0,1,2,3,4,5]).
+listColorsNumber([2,0,1,3,4,5]).

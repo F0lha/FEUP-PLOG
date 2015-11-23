@@ -1,16 +1,13 @@
 :- use_module(library(lists)).
 :-use_module(library(random)).
-%:-use_module(library(between)).
+:-use_module(library(between)).
 :- use_module(library(clpfd)).
 :- use_module(library(aggregate)).
 
-
+%There must exist one list of Colours of each list wheels
 
 listColors([white, blue, green, black, red, yellow]).
-listWheels1([(n2,n35), (n14,n46), (n21,n55), (n22,n54), (n29,n62)]).
-listWheels2([(n3,n37), (n4,n36), (n13,n47), (n32,n65)]).
-listColorsNumber1([0,1,2,3,4,5]).
-listColorsNumber2([2,0,1,3,4,5]).
+
 
 :-[graph].
 
@@ -43,9 +40,11 @@ restrictDoubleWheelsAux(ListNodes,List,ListColor,(Node1,Node2)):-getColorOfNodes
 																nth0(IndexCor,ListColor,Col1),IndexCorCorrected is mod((IndexCor+3),6),
 																nth0(IndexCorCorrected,ListColor,Col), Col #= Col2.
 
-restrictDoubleWheels(ListNodes,List):-
-										listWheels1(ListWheels1),listColorsNumber1(ListColors1),foreach(member(Wheel1,ListWheels1),restrictDoubleWheelsAux(ListNodes,List,ListColors1,Wheel1)),
-										listWheels2(ListWheels2),listColorsNumber2(ListColors2),foreach(member(Wheel2,ListWheels2),restrictDoubleWheelsAux(ListNodes,List,ListColors2,Wheel2)).
+restrictDoubleWheels(ListNodes,List):-findall(X,listWheels(X),ListWheels),findall(X,listColorsNumber(X),ListColors),length(ListWheels,NWheels),
+									  foreach(between(1,NWheels,Index),restrictDoubleWheels(ListNodes,List,Index,ListWheels,ListColors)).
+
+restrictDoubleWheels(ListNodes,List,Index,ListWheels,ListColors):-	nth1(Index,ListWheels,ListWheels1),nth1(Index,ListColors,ListColors1),
+																	foreach(member(Wheel1,ListWheels1),restrictDoubleWheelsAux(ListNodes,List,ListColors1,Wheel1)).
 
 
 %Print Relation between 2 Nodes
@@ -101,20 +100,18 @@ write('2 - Credits '),nl,
 write('3 - Exit '),nl,
 read(Answer), menuAnswer(Answer).
 
-menuAnswer(1):-originalMenu,!,menu.
+menuAnswer(1):-originalGame(0),!,menu.
 menuAnswer(2):-credits,!,menu.
 menuAnswer(3):-!.
 menuAnswer(_):-write('Wrong Input'),nl,nl,!,menu.
 
 credits:-nl, write('Puzzle implementation made by Joao Baiao and Pedro Castro'),nl, nl.
 
-originalMenu:-nl,
-nl,
-write('How Many Different Colours Maximum? '),
-read(Answer), originalGame(Answer).	
-
 originalMenu:-write('Its Not Possible To Fill the Puzzle with that amount of Different Colours'),nl.
 		
-originalGame(N):-listAllNodes(ListNodes),createEmptyListNodeSized(ListNodes,List) ,domain(List,0,6),nvalue(N,List),
+originalGame(N):-listAllNodes(ListNodes),createEmptyListNodeSized(ListNodes,List),domain(List,0,5),nvalue(N,List),
 				restrictColorsOfGraph(ListNodes,List),restrictDoubleWheels(ListNodes,List),labeling([],List),
-				printGraph(ListNodes,List).
+				printGraph(ListNodes,List),nl,
+				print('Puzzle Completed with '),print(N), print(' different colours!\n'),nl.
+				
+originalGame(N):-!,print('Impossible to complete the puzzle with '), print(N), print(' different colours!\n'),N1 is N+1,originalGame(N1).
