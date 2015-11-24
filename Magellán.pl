@@ -6,6 +6,8 @@
 
 :-dynamic(listWheels/1).
 :-dynamic(listColorsNumber/1).
+:-dynamic(redge/2).
+:-dynamic(timeB/1).
 
 
 
@@ -66,11 +68,11 @@ printColors(ListNodes,List):-length(ListNodes,Size),foreach(between(1,Size,Index
 
 %Print colored Node
 
-printNode(ListNodes,List,Index):-nth1(Index,ListNodes,Node),findall(Y,edge(Node,Y),L1),remove_dups(L1,L),foreach(member(SecondNode,L),(printRelation(ListNodes,List,Node,SecondNode,Index);true)).
+printNode(ListNodes,List,Index,Term):-nth1(Index,ListNodes,Node),TermToFind=..[Term,Node,Y],findall(Y,TermToFind,L1),remove_dups(L1,L),foreach(member(SecondNode,L),(printRelation(ListNodes,List,Node,SecondNode,Index);true)).
 
 %Print colored Graph
 
-printGraph(ListNodes,List):-length(ListNodes,Size),foreach(between(1,Size,Index),printNode(ListNodes,List,Index)).
+printGraph(ListNodes,List,Term):-length(ListNodes,Size),foreach(between(1,Size,Index),printNode(ListNodes,List,Index,Term)).
 
 %Create List with only Variables not initialized
 
@@ -90,11 +92,30 @@ restrictTwoNodes(ListNodes,List,Node,SecondNode):- getColorOfNodes(ListNodes,Lis
 																			
 %Restrict Color of a Node
 
-restrictColorsOfNode(ListNodes,List,Node):-findall(Y,edge(Node,Y),L1),findall(Y,edge(Y,Node),L2),append(L1,L2,Ls),removeDups(Ls,L),foreach(member(SecondNode,L),restrictTwoNodes(ListNodes,List,Node,SecondNode)).
+restrictColorsOfNode(ListNodes,List,Node,Term):-TermToFind1=..[Term,Node,Y],findall(Y,TermToFind1,L1),TermToFind2=..[Term,Y,Node],
+												findall(Y,TermToFind2,L2),append(L1,L2,L),
+												foreach(member(SecondNode,L),restrictTwoNodes(ListNodes,List,Node,SecondNode)).
 
 %Restrict the graph for having different values for adjacent nodes
 
-restrictColorsOfGraph(ListNodes,List):-foreach(member(Node,ListNodes),restrictColorsOfNode(ListNodes,List,Node)).
+restrictColorsOfGraph(ListNodes,List,Term):-foreach(member(Node,ListNodes),restrictColorsOfNode(ListNodes,List,Node,Term)).
+
+%%%% RANDOM GRAPH  %%%%
+
+
+createRandomNodes(ListNodes,N):-numlist(1,N,ListNodes).
+
+createRandomEdges([]).
+
+createRandomEdges([Node1|Rest]):-maybe(0.6),length(Rest,N),random(0,N,Index),nth0(Index,Rest,Node2),assertz(redge(Node1,Node2)),createRandomEdges([Node1|Rest]),!.
+
+createRandomEdges([_|Rest]):-createRandomEdges(Rest).
+
+deleteRandomEdges:-retractall(redge(_,_)).
+
+checkPlanarGraph(ListNodes,Term):-length(ListNodes,V),TermToFind=..[Term,X,Y],findall(X-Y,TermToFind,L),length(L,E), RealV is (3*V) - 6, E =< RealV.
+
+%%%%%%
 
 
 menu:- nl, write('WELCOME TO MAGELLAN'),nl,
@@ -102,22 +123,47 @@ assertz(listWheels([])),
 assertz(listColorsNumber([])),
 nl,
 write('1 - Original Puzzle '),nl,
-write('2 - Credits '),nl,
-write('3 - Exit '),nl,
+write('2 - Random Graph '),nl,
+write('3 - Credits '),nl,
+write('4 - Exit '),nl,
 read(Answer), menuAnswer(Answer).
 
 menuAnswer(1):-originalGame(0),!,menu.
-menuAnswer(2):-credits,!,menu.
-menuAnswer(3):-!.
+menuAnswer(2):-randomGraphingMenu,!,menu.
+menuAnswer(3):-credits,!,menu.
+menuAnswer(4):-!.
 menuAnswer(_):-write('Wrong Input'),nl,nl,!,menu.
 
+randomGraphing(ListNodes,N):-statistics('runtime',_),createEmptyListNodeSized(ListNodes,List),domain(List,0,5),nvalue(N,List),
+				restrictColorsOfGraph(ListNodes,List,redge),labeling([ffc],List),
+				printGraph(ListNodes,List,redge),nl,
+				nl,statistics('runtime',[SinceBeginning,Value]),
+				print('Puzzle Completed with '),print(N), print(' different colours! RunTime = '),print(Value),print('ms!\n'),
+				print('Full RunTime = '),timeB(Time),TimeDeff is  SinceBeginning - Time, print(TimeDeff),nl,retractall(timeB(_)),
+				nl,
+				fd_statistics,nl,
+				deleteRandomEdges.
+				
+randomGraphing(ListNodes,N):-!,print('Impossible to complete the puzzle with '), print(N), print(' different colours!\n'),N1 is N+1,randomGraphing(ListNodes,N1).
+
 credits:-nl, write('Puzzle implementation made by Joao Baiao and Pedro Castro'),nl, nl.
+
+randomGraphingMenu:-print('How many Nodes Should the Graph have? (More than 3)'), read(N), 
+					statistics('runtime',[T,_]),assertz(timeB(T)),randomGraphingManager(N).
+
+randomCreation(N):-createRandomNodes(ListNodes,N),createRandomEdges(ListNodes),checkPlanarGraph(ListNodes,redge),randomGraphing(ListNodes,0).
+
+randomCreation(N):-print('Random Graph Generated is Not a Planar Graph!\n'),deleteRandomEdges,!, randomCreation(N).
+
+randomGraphingManager(N):-N > 3,randomCreation(N).
+
+randomGraphingManager(_):-print('Number of Nodes invalid!\n'),!,menu.
 
 originalMenu:-write('Its Not Possible To Fill the Puzzle with that amount of Different Colours'),nl.
 		
 originalGame(N):-listAllNodes(ListNodes),createEmptyListNodeSized(ListNodes,List),domain(List,0,5),nvalue(N,List),
-				restrictColorsOfGraph(ListNodes,List),restrictDoubleWheels(ListNodes,List), labeling([],List),
-				printGraph(ListNodes,List),nl,
+				restrictColorsOfGraph(ListNodes,List,edge),restrictDoubleWheels(ListNodes,List), labeling([],List),
+				printGraph(ListNodes,List,edge),nl,
 				print('Puzzle Completed with '),print(N), print(' different colours!\n'),nl,
 				fd_statistics,nl.
 				
