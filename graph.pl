@@ -40,7 +40,6 @@ edge(n10,n16).
 
 edge(n11,n12).
 edge(n11,n13).
-edge(n11,n15).
 
 edge(n12,n13).
 edge(n12,n14).
@@ -151,7 +150,6 @@ edge(n43,n49).
 
 edge(n44,n45).
 edge(n44,n46).
-edge(n44,n48).
 
 edge(n45,n46).
 edge(n45,n47).

@@ -116,7 +116,7 @@ credits:-nl, write('Puzzle implementation made by Joao Baiao and Pedro Castro'),
 originalMenu:-write('Its Not Possible To Fill the Puzzle with that amount of Different Colours'),nl.
 		
 originalGame(N):-listAllNodes(ListNodes),createEmptyListNodeSized(ListNodes,List),domain(List,0,5),nvalue(N,List),
-				restrictColorsOfGraph(ListNodes,List),restrictDoubleWheels(ListNodes,List),nth0(12,List,Cor), Cor#=0,nth0(0,List,Cor), Cor#=0, labeling([],List),
+				restrictColorsOfGraph(ListNodes,List),restrictDoubleWheels(ListNodes,List), labeling([],List),
 				printGraph(ListNodes,List),nl,
 				print('Puzzle Completed with '),print(N), print(' different colours!\n'),nl,
 				fd_statistics,nl.
