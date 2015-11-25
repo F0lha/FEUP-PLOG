@@ -158,9 +158,15 @@ randomGraphingManager(N):-N > 3,randomCreation(N).
 randomGraphingManager(_):-print('Number of Nodes invalid!\n'),!,menu.
 
 originalMenu:-write('Its Not Possible To Fill the Puzzle with that amount of Different Colours'),nl.
+
+deleteIndex([_|L],0,L).
+
+deleteIndex([H|Rest],Index,[H|NewList]):- NewIndex is Index - 1, deleteIndex(Rest,NewIndex,NewList).
+
+sel(_,Vars,Selected,Rest):-length(Vars,N1),N is N1 - 1,random(0,N,RandomIndex),print('Size = '),print(N1),print('/RandomIndex = '),print(RandomIndex),nl,nth0(RandomIndex,Vars,Selected).
 		
 originalGame(N):-listAllNodes(ListNodes),createEmptyListNodeSized(ListNodes,List),domain(List,0,5),nvalue(N,List),
-				restrictColorsOfGraph(ListNodes,List,edge),restrictDoubleWheels(ListNodes,List), labeling([],List),
+				restrictColorsOfGraph(ListNodes,List,edge),restrictDoubleWheels(ListNodes,List), labeling([variable(sel(_))],List),
 				printGraph(ListNodes,List,edge),nl,
 				print('Puzzle Completed with '),print(N), print(' different colours!\n'),nl,
 				fd_statistics,nl.
