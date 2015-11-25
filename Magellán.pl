@@ -11,7 +11,6 @@
 
 listColors([white, blue, green, yellow, red, black]).
 
-
 :-[graph].
 
 %%%% AUX FUNCTIONS  %%%%
@@ -126,14 +125,14 @@ write('3 - Credits '),nl,
 write('4 - Exit '),nl,
 read(Answer), menuAnswer(Answer).
 
-menuAnswer(1):-originalGame(0),!,menu.
+menuAnswer(1):-chooseTypeOfLabeling(Type),originalGame(0,Type),!,menu.
 menuAnswer(2):-randomGraphingMenu,!,menu.
 menuAnswer(3):-credits,!,menu.
 menuAnswer(4):-!.
 menuAnswer(_):-write('Wrong Input'),nl,nl,!,menu.
 
-randomGraphing(ListNodes,N):-statistics('runtime',_),createEmptyListNodeSized(ListNodes,List),domain(List,0,5),nvalue(N,List),
-				restrictColorsOfGraph(ListNodes,List,redge),labeling([ffc],List),
+randomGraphing(ListNodes,N,Type):-statistics('runtime',_),createEmptyListNodeSized(ListNodes,List),domain(List,0,5),nvalue(N,List),
+				restrictColorsOfGraph(ListNodes,List,redge),print('loop'),labeling(Type,List),
 				printGraph(ListNodes,List,redge),nl,
 				nl,statistics('runtime',[SinceBeginning,Value]),
 				print('Puzzle Completed with '),print(N), print(' different colours! RunTime = '),print(Value),print('ms!\n'),
@@ -142,14 +141,14 @@ randomGraphing(ListNodes,N):-statistics('runtime',_),createEmptyListNodeSized(Li
 				fd_statistics,nl,
 				deleteRandomEdges.
 				
-randomGraphing(ListNodes,N):-!,print('Impossible to complete the puzzle with '), print(N), print(' different colours!\n'),N1 is N+1,randomGraphing(ListNodes,N1).
+randomGraphing(ListNodes,N,Type):-!,print('Impossible to complete the puzzle with '), print(N), print(' different colours!\n'),N1 is N+1,randomGraphing(ListNodes,N1,Type).
 
 credits:-nl, write('Puzzle implementation made by Joao Baiao and Pedro Castro'),nl, nl.
 
 randomGraphingMenu:-print('How many Nodes Should the Graph have? (More than 3)'), read(N), 
 					statistics('runtime',[T,_]),assertz(timeB(T)),randomGraphingManager(N).
 
-randomCreation(N):-createRandomNodes(ListNodes,N),createRandomEdges(ListNodes),checkPlanarGraph(ListNodes,redge),randomGraphing(ListNodes,0).
+randomCreation(N):-createRandomNodes(ListNodes,N),createRandomEdges(ListNodes),checkPlanarGraph(ListNodes,redge),chooseTypeOfLabeling(Type),randomGraphing(ListNodes,0,Type).
 
 randomCreation(N):-print('Random Graph Generated is Not a Planar Graph! Generating Again!\n'),deleteRandomEdges,!, randomCreation(N).
 
@@ -163,12 +162,23 @@ deleteIndex([_|L],0,L).
 
 deleteIndex([H|Rest],Index,[H|NewList]):- NewIndex is Index - 1, deleteIndex(Rest,NewIndex,NewList).
 
-sel(_,Vars,Selected,Rest):-length(Vars,N1),N is N1 - 1,random(0,N,RandomIndex),print('Size = '),print(N1),print('/RandomIndex = '),print(RandomIndex),nl,nth0(RandomIndex,Vars,Selected).
+sel(Vars,Selected,Rest):-length(Vars,N1),N is N1 - 1,random(0,N,RandomIndex),nth0(RandomIndex,Vars,Selected),var(Selected),deleteIndex(Vars,RandomIndex,Rest).
+
+chooseTypeOfLabeling(Type):-	nl,write('What Type of Labeling do you want?'),nl,
+						write('1 - Default Labeling '),nl,
+						write('2 - Random Labeling '),nl,
+						write('3 - FFC '),nl,
+						read(Answer), typeOfLabelingAnswer(Answer,Type).
+						
+typeOfLabelingAnswer(1,[]).
+typeOfLabelingAnswer(2,[variable(sel)]).
+typeOfLabelingAnswer(3,[ffc]).
+typeOfLabelingAnswer(_,Type):-write('Wrong Input'),nl,nl,!,chooseTypeOfLabeling(Type).
 		
-originalGame(N):-listAllNodes(ListNodes),createEmptyListNodeSized(ListNodes,List),domain(List,0,5),nvalue(N,List),
-				restrictColorsOfGraph(ListNodes,List,edge),restrictDoubleWheels(ListNodes,List), labeling([variable(sel(_))],List),
+originalGame(N,Type):-listAllNodes(ListNodes),createEmptyListNodeSized(ListNodes,List),domain(List,0,5),nvalue(N,List),
+				restrictColorsOfGraph(ListNodes,List,edge),restrictDoubleWheels(ListNodes,List), labeling(Type,List),
 				printGraph(ListNodes,List,edge),nl,
 				print('Puzzle Completed with '),print(N), print(' different colours!\n'),nl,
 				fd_statistics,nl.
 				
-originalGame(N):-!,print('Impossible to complete the puzzle with '), print(N), print(' different colours!\n'),N1 is N+1,originalGame(N1).
+originalGame(N,Type):-!,print('Impossible to complete the puzzle with '), print(N), print(' different colours!\n'),N1 is N+1,originalGame(N1,Type).
