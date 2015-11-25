@@ -9,8 +9,6 @@
 :-dynamic(redge/2).
 :-dynamic(timeB/1).
 
-
-
 listColors([white, blue, green, yellow, red, black]).
 
 
@@ -153,7 +151,7 @@ randomGraphingMenu:-print('How many Nodes Should the Graph have? (More than 3)')
 
 randomCreation(N):-createRandomNodes(ListNodes,N),createRandomEdges(ListNodes),checkPlanarGraph(ListNodes,redge),randomGraphing(ListNodes,0).
 
-randomCreation(N):-print('Random Graph Generated is Not a Planar Graph!\n'),deleteRandomEdges,!, randomCreation(N).
+randomCreation(N):-print('Random Graph Generated is Not a Planar Graph! Generating Again!\n'),deleteRandomEdges,!, randomCreation(N).
 
 randomGraphingManager(N):-N > 3,randomCreation(N).
 
