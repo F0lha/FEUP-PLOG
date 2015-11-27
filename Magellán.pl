@@ -132,7 +132,7 @@ menuAnswer(4):-!.
 menuAnswer(_):-write('Wrong Input'),nl,nl,!,menu.
 
 randomGraphing(ListNodes,N,Type):-statistics('runtime',_),createEmptyListNodeSized(ListNodes,List),domain(List,0,5),nvalue(N,List),
-				restrictColorsOfGraph(ListNodes,List,redge),print('loop'),labeling(Type,List),
+				restrictColorsOfGraph(ListNodes,List,redge),labeling(Type,List),
 				printGraph(ListNodes,List,redge),nl,
 				nl,statistics('runtime',[SinceBeginning,Value]),
 				print('Puzzle Completed with '),print(N), print(' different colours! RunTime = '),print(Value),print('ms!\n'),
