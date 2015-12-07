@@ -139,7 +139,7 @@ menuAnswer(4):-!.
 menuAnswer(_):-write('Wrong Input'),nl,nl,!,menu.
 
 randomGraphing(ListNodes,Type,TimeOut):-statistics('runtime',_),createEmptyListNodeSized(ListNodes,List),domain(List,0,5),nvalue(N,List),
-				restrictColorsOfGraph(ListNodes,List,redge),labeling([best,time_out(TimeOut, Lr),minimize(N)|Type],List),
+				restrictColorsOfGraph(ListNodes,List,redge),labeling([time_out(TimeOut, Lr),minimize(N)|Type],List),
 				printGraph(ListNodes,List,redge),nl,
 				nl,statistics('runtime',[SinceBeginning,Value]),
 				printTimeOut(Lr),
@@ -174,8 +174,17 @@ sel(Vars,Selected,Rest):-random_select(Selected,Vars,Rest),print(Selected),nl,va
 
 
 chooseTimeOut(TimeOut):-nl,write('How Much Time Should the TimeOut be ?'),nl,
-						read(TimeOut), number(TimeOut).
+						read(TimeOut), number(TimeOut), TimeOut > 0.
 chooseTimeOut(TimeOut):-nl,print('Wrong Input/ Insufficient TimeOut'),nl,nl,!,chooseTimeOut(TimeOut).
+
+minimizeColors(Type,List,Optimization,N):-nl,write('Should the number of colors used optimized (this means using the least number of colors possible) ?'),nl,
+							read(Answer),minimizeColorsAnswer(Type,Answer,List,Optimization,N).
+							
+minimizeColorsAnswer(Type,'y',List,[minimize(N)|Type],N):-nvalue(N,List).
+minimizeColorsAnswer(Type,'Y',List,[minimize(N)|Type],N):-nvalue(N,List).	
+minimizeColorsAnswer(Type,'n',List,Type,N):-nvalue(N,List).	
+minimizeColorsAnswer(Type,'N',List,Type,N):-nvalue(N,List).	
+minimizeColorsAnswer(Type,_,List,Optimization,N):-write('Wrong Input'),nl,nl,!,minimizeColors(Type,List,Optimization,N).
 
 
 chooseTypeOfLabeling(Type):-	nl,write('What Type of Labeling do you want?'),nl,
@@ -192,8 +201,8 @@ typeOfLabelingAnswer(_,Type):-write('Wrong Input'),nl,nl,!,chooseTypeOfLabeling(
 printTimeOut('time_out'):-print('A timeout has occurred!!! Displaying best solution found until then!'),nl.
 printTimeOut('success'):-print('No timeout ocurred :D'),nl.
 		
-originalGame(Type,TimeOut):-listAllNodes(ListNodes),createEmptyListNodeSized(ListNodes,List),domain(List,0,5),nvalue(N,List),
-				restrictColorsOfGraph(ListNodes,List,edge),restrictDoubleWheels(ListNodes,List),labeling([best,time_out(TimeOut, Lr),minimize(N)|Type],List),
+originalGame(Type,TimeOut):-listAllNodes(ListNodes),createEmptyListNodeSized(ListNodes,List),domain(List,0,5),minimizeColors(Type,List,Optimization,N),
+				restrictColorsOfGraph(ListNodes,List,edge),restrictDoubleWheels(ListNodes,List),nl,print(List),nl,labeling([time_out(TimeOut, Lr)|Optimization],List),
 				printGraph(ListNodes,List,edge),nl,
 				print('Puzzle Completed with '),print(N), print(' different colours!\n'),nl,
 				printTimeOut(Lr),
