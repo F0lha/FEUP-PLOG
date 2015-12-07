@@ -39,4 +39,13 @@ daCartas([Cab|Cartas], [Cab|Mao1], Resto, Contador):-
 deleteFromList([Element|List],Element,List).
 deleteFromList([H|List],Element,[H|NewList]):-deleteFromList(List,Element,NewList).
 
+soma([],X,0):-!.
+
+soma([Head|Tail],Head,N):-
+	soma(Tail,Head,N1),
+	N is 1+N1.
+soma([_|Tail],Head,N1):-
+	write(N1),nl,
+	soma(Tail,Head,N1).
+
 

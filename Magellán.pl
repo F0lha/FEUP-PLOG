@@ -15,6 +15,12 @@ listColors([white, blue, green, yellow, red, black]).
 
 %%%% AUX FUNCTIONS  %%%%
 
+%rotateVec(OriginalVec,NewVec,N).
+
+rotateVec(Vec,Vec,0).
+
+rotateVec([H|Rest],NewVec,N):-N > 0,N1 is N - 1, append(Rest,[H],Vec),rotateVec(Vec,NewVec,N1).
+
 flatten([], []) :- !.
 flatten([L|Ls], FlatL) :-
     !,
@@ -41,8 +47,9 @@ makeListNSize([H|Rest],N,[H|NewRest]):-N1 is N - 1, makeListNSize(Rest,N1,NewRes
 %Restricts the puzzle acording to the joint wheels given
 
 restrictDoubleWheelsAux(ListNodes,List,ListColor,(Node1,Node2)):-getColorOfNodes(ListNodes,List,Node1,Node2,Col1,Col2),
-																nth0(IndexCol,ListColor,Col1),IndexCorCorrected is mod((IndexCol+3),6),
-																nth0(IndexCorCorrected,ListColor,Col), Col #= Col2.
+																element(IndexCol,ListColor,Col1),
+																rotateVec(ListColor,NewListColor,3),
+																element(IndexCol,NewListColor,Col), Col #= Col2.
 
 restrictDoubleWheels(ListNodes,List):-findall(X,listWheels(X),ListWheels),findall(X,listColorsNumber(X),ListColors),length(ListWheels,NWheels),
 									  foreach(between(1,NWheels,Index),restrictDoubleWheels(ListNodes,List,Index,ListWheels,ListColors)).
@@ -125,30 +132,29 @@ write('3 - Credits '),nl,
 write('4 - Exit '),nl,
 read(Answer), menuAnswer(Answer).
 
-menuAnswer(1):-chooseTypeOfLabeling(Type),originalGame(0,Type),!,menu.
+menuAnswer(1):-chooseTypeOfLabeling(Type),chooseTimeOut(TimeOut),originalGame(Type,TimeOut),!,menu.
 menuAnswer(2):-randomGraphingMenu,!,menu.
 menuAnswer(3):-credits,!,menu.
 menuAnswer(4):-!.
 menuAnswer(_):-write('Wrong Input'),nl,nl,!,menu.
 
-randomGraphing(ListNodes,N,Type):-statistics('runtime',_),createEmptyListNodeSized(ListNodes,List),domain(List,0,5),nvalue(N,List),
-				restrictColorsOfGraph(ListNodes,List,redge),labeling(Type,List),
+randomGraphing(ListNodes,Type,TimeOut):-statistics('runtime',_),createEmptyListNodeSized(ListNodes,List),domain(List,0,5),nvalue(N,List),
+				restrictColorsOfGraph(ListNodes,List,redge),labeling([best,time_out(TimeOut, Lr),minimize(N)|Type],List),
 				printGraph(ListNodes,List,redge),nl,
 				nl,statistics('runtime',[SinceBeginning,Value]),
+				printTimeOut(Lr),
 				print('Puzzle Completed with '),print(N), print(' different colours! RunTime = '),print(Value),print('ms!\n'),
 				print('Full RunTime = '),timeB(Time),TimeDeff is  SinceBeginning - Time, print(TimeDeff),nl,retractall(timeB(_)),
 				nl,
 				fd_statistics,nl,
 				deleteRandomEdges.
 				
-randomGraphing(ListNodes,N,Type):-!,print('Impossible to complete the puzzle with '), print(N), print(' different colours!\n'),N1 is N+1,randomGraphing(ListNodes,N1,Type).
-
 credits:-nl, write('Puzzle implementation made by Joao Baiao and Pedro Castro'),nl, nl.
 
 randomGraphingMenu:-print('How many Nodes Should the Graph have? (More than 3)'), read(N), 
 					statistics('runtime',[T,_]),assertz(timeB(T)),randomGraphingManager(N).
 
-randomCreation(N):-createRandomNodes(ListNodes,N),createRandomEdges(ListNodes),checkPlanarGraph(ListNodes,redge),chooseTypeOfLabeling(Type),randomGraphing(ListNodes,0,Type).
+randomCreation(N):-createRandomNodes(ListNodes,N),createRandomEdges(ListNodes),checkPlanarGraph(ListNodes,redge),chooseTypeOfLabeling(Type),chooseTimeOut(TimeOut),randomGraphing(ListNodes,Type,TimeOut).
 
 randomCreation(N):-print('Random Graph Generated is Not a Planar Graph! Generating Again!\n'),deleteRandomEdges,!, randomCreation(N).
 
@@ -162,7 +168,15 @@ deleteIndex([_|L],0,L).
 
 deleteIndex([H|Rest],Index,[H|NewList]):- NewIndex is Index - 1, deleteIndex(Rest,NewIndex,NewList).
 
-sel(Vars,Selected,Rest):-length(Vars,N1),N is N1 - 1,random(0,N,RandomIndex),nth0(RandomIndex,Vars,Selected),var(Selected),deleteIndex(Vars,RandomIndex,Rest).
+sel(Vars,Selected,Rest):-random_select(Selected,Vars,Rest),print(Selected),nl,var(Selected).
+
+%sel(Vars,Selected,Rest):-length(Vars,N1),N is N1 - 1,random(0,N,RandomIndex),nth0(RandomIndex,Vars,Selected),var(Selected),deleteIndex(Vars,RandomIndex,Rest).
+
+
+chooseTimeOut(TimeOut):-nl,write('How Much Time Should the TimeOut be ?'),nl,
+						read(TimeOut), number(TimeOut).
+chooseTimeOut(TimeOut):-nl,print('Wrong Input/ Insufficient TimeOut'),nl,nl,!,chooseTimeOut(TimeOut).
+
 
 chooseTypeOfLabeling(Type):-	nl,write('What Type of Labeling do you want?'),nl,
 						write('1 - Default Labeling '),nl,
@@ -174,11 +188,13 @@ typeOfLabelingAnswer(1,[]).
 typeOfLabelingAnswer(2,[variable(sel)]).
 typeOfLabelingAnswer(3,[ffc]).
 typeOfLabelingAnswer(_,Type):-write('Wrong Input'),nl,nl,!,chooseTypeOfLabeling(Type).
+
+printTimeOut('time_out'):-print('A timeout has occurred!!! Displaying best solution found until then!'),nl.
+printTimeOut('success'):-print('No timeout ocurred :D'),nl.
 		
-originalGame(N,Type):-listAllNodes(ListNodes),createEmptyListNodeSized(ListNodes,List),domain(List,0,5),nvalue(N,List),
-				restrictColorsOfGraph(ListNodes,List,edge),restrictDoubleWheels(ListNodes,List), labeling(Type,List),
+originalGame(Type,TimeOut):-listAllNodes(ListNodes),createEmptyListNodeSized(ListNodes,List),domain(List,0,5),nvalue(N,List),
+				restrictColorsOfGraph(ListNodes,List,edge),restrictDoubleWheels(ListNodes,List),labeling([best,time_out(TimeOut, Lr),minimize(N)|Type],List),
 				printGraph(ListNodes,List,edge),nl,
 				print('Puzzle Completed with '),print(N), print(' different colours!\n'),nl,
+				printTimeOut(Lr),
 				fd_statistics,nl.
-				
-originalGame(N,Type):-!,print('Impossible to complete the puzzle with '), print(N), print(' different colours!\n'),N1 is N+1,originalGame(N1,Type).
