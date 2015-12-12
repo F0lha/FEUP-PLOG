@@ -49,3 +49,20 @@ soma([_|Tail],Head,N1):-
 	soma(Tail,Head,N1).
 
 
+
+	
+
+				
+countConsecutiveWhite([],0,[]).
+
+countConsecutiveWhite([],Count,[Count]).
+				
+countConsecutiveWhite([1 | Tail],0,L):-
+				countConsecutiveWhite(Tail,0,L).
+countConsecutiveWhite([1 | Tail],Count,[Count|L]):-
+				countConsecutiveWhite(Tail,	0,L).
+				
+countConsecutiveWhite([2 | Tail],Count,L):-
+				NewCount is Count + 1,
+				countConsecutiveWhite(Tail,NewCount,L).
+	
