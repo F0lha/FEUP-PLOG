@@ -13,6 +13,8 @@ listColors([white, blue, green, yellow, red, black]).
 
 :-[graph].
 
+:-initialization(menu).
+
 %%%% AUX FUNCTIONS  %%%%
 
 %rotateVec(OriginalVec,NewVec,N).
@@ -168,7 +170,7 @@ deleteIndex([_|L],0,L).
 
 deleteIndex([H|Rest],Index,[H|NewList]):- NewIndex is Index - 1, deleteIndex(Rest,NewIndex,NewList).
 
-sel(Vars,Selected,Rest):-random_select(Selected,Vars,Rest),print(Selected),nl,var(Selected).
+sel(Vars,Selected,Rest):-random_select(Selected,Vars,Rest),var(Selected).
 
 %sel(Vars,Selected,Rest):-length(Vars,N1),N is N1 - 1,random(0,N,RandomIndex),nth0(RandomIndex,Vars,Selected),var(Selected),deleteIndex(Vars,RandomIndex,Rest).
 
@@ -202,7 +204,7 @@ printTimeOut('time_out'):-print('A timeout has occurred!!! Displaying best solut
 printTimeOut('success'):-print('No timeout ocurred :D'),nl.
 		
 originalGame(Type,TimeOut):-listAllNodes(ListNodes),createEmptyListNodeSized(ListNodes,List),domain(List,0,5),minimizeColors(Type,List,Optimization,N),
-				restrictColorsOfGraph(ListNodes,List,edge),restrictDoubleWheels(ListNodes,List),nl,print(List),nl,labeling([time_out(TimeOut, Lr)|Optimization],List),
+				restrictColorsOfGraph(ListNodes,List,edge),restrictDoubleWheels(ListNodes,List),labeling([time_out(TimeOut, Lr)|Optimization],List),
 				printGraph(ListNodes,List,edge),nl,
 				print('Puzzle Completed with '),print(N), print(' different colours!\n'),nl,
 				printTimeOut(Lr),
