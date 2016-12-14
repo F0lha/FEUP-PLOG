@@ -45,7 +45,7 @@ divide([[ID|[Money]]|List],[ID|IDList],[Money|MoneyList]):-divide(List,IDList,Mo
 
 %restrictions
 
-sumCosts(ListOfLectures,_,ListOfSpeakers):-getListOfMoneyAndID(ListOfSpeakers,IDMoney),print('IDMoney '),print(IDMoney),nl,table(Tuple,IDMoney), divide(Tuple,IDList,MoneyList),print('ups'),
+sumCosts(ListOfLectures,_,ListOfSpeakers):-getListOfMoneyAndID(ListOfSpeakers,IDMoney),print('IDMoney '),print(IDMoney),length(Tuple,2),nl,table([Tuple],IDMoney), divide(Tuple,IDList,MoneyList),print('ups'),
 											element(_,ListOfLectures,ID),element(_,IDList,ID),nl,print(Tuple).
 %sum(ListOfMoney, #=<, Budget).
 
