@@ -41,12 +41,12 @@ getListOfMoneyAndID([],[]).
 getListOfMoneyAndID([Speaker|ListOfSpeakers],ListOfMoney):-getListOfMoneyAndID(ListOfSpeakers,OtherList), nth0(4,Speaker,ID),nth0(2,Speaker,Money),append([ID],[Money],IDMoney),append([IDMoney],OtherList,ListOfMoney).
 
 divide([],[],[]).
-divide([[ID|[Money]]|List],[ID|IDList],[Money|MoneyList]):-divide(List,IDList,MoneyList).
+divide([Head|List],[ID|IDList],[Money|MoneyList]):-element(1,Head,ID),element(2,Head,Money),divide(List,IDList,MoneyList).
 
 %restrictions
 
-sumCosts(ListOfLectures,_,ListOfSpeakers):-getListOfMoneyAndID(ListOfSpeakers,IDMoney),print('IDMoney '),print(IDMoney),length(Tuple,2),nl,table([Tuple],IDMoney), divide(Tuple,IDList,MoneyList),print('ups'),
-											element(_,ListOfLectures,ID),element(_,IDList,ID),nl,print(Tuple).
+sumCosts(ListOfLectures,Budget,ListOfSpeakers):-getListOfMoneyAndID(ListOfSpeakers,IDMoney),length(Tuple,2),nl,table([Tuple],IDMoney),divide([Tuple],IDList,MoneyList),
+											element(_,ListOfLectures,ID),element(_,IDList,ID),sum(MoneyList, #=<, Budget).
 %sum(ListOfMoney, #=<, Budget).
 
 everyLectureHasASpeaker([],_).
