@@ -41,12 +41,19 @@ getListOfMoneyAndID([],[]).
 getListOfMoneyAndID([Speaker|ListOfSpeakers],ListOfMoney):-getListOfMoneyAndID(ListOfSpeakers,OtherList), nth0(4,Speaker,ID),nth0(2,Speaker,Money),append([ID],[Money],IDMoney),append([IDMoney],OtherList,ListOfMoney).
 
 divide([],[],[]).
-divide([Head|List],[ID|IDList],[Money|MoneyList]):-element(1,Head,ID),element(2,Head,Money),divide(List,IDList,MoneyList).
+divide([[ID|[Money|[]]]|List],[ID|IDList],[Money|MoneyList]):-divide(List,IDList,MoneyList).
+
+createListOfPairs([]).
+createListOfPairs([Head|Tuple]):-length(Head,2),createListOfPairs(Tuple).
+
+sameRestricList([],[]).
+sameRestricList([Head1|List1],[Head2|List2]):-Head1 #= Head2,sameRestricList(List1,List2).
 
 %restrictions
 
-sumCosts(ListOfLectures,Budget,ListOfSpeakers):-getListOfMoneyAndID(ListOfSpeakers,IDMoney),length(Tuple,2),nl,table([Tuple],IDMoney),divide([Tuple],IDList,MoneyList),
-											element(_,ListOfLectures,ID),element(_,IDList,ID),sum(MoneyList, #=<, Budget).
+sumCosts(ListOfLectures,Budget,ListOfSpeakers):-getListOfMoneyAndID(ListOfSpeakers,IDMoney),length(ListOfLectures,Length),length(Tuple,Length),createListOfPairs(Tuple),
+											table(Tuple,IDMoney),divide(Tuple,IDList,MoneyList),all_distinct(IDList),
+											sameRestricList(IDList,ListOfLectures),sum(MoneyList, #=<, Budget).
 %sum(ListOfMoney, #=<, Budget).
 
 everyLectureHasASpeaker([],_).
@@ -61,9 +68,10 @@ startRestrictions(ListOfLectures,_,Budget,ListOfSpeakers):-getIDFromList(ListOfS
 
 mainPred:-	daysOfConference(Days),lecturePerDay(Lectures), SizeOfList is Days*Lectures, moneyAvailable(Money),
 			length(ListOfLectures,SizeOfList), getAllSpeakers(ListOfSpeakers), startRestrictions(ListOfLectures,Days,Money,ListOfSpeakers),
-			!,
-			labeling([],ListOfLectures),nl,
-			write(ListOfLectures).
+			nl,
+			labeling([],ListOfLectures),	
+			nl,
+			write(ListOfLectures),nl.
 mainPred:-write('nop').
 
 
@@ -71,18 +79,18 @@ moneyAvailable(Money):-	nl,write('How much money Available?'),nl,
 						read(Answer), moneyAvailableAnswer(Answer,Money).
 						
 moneyAvailableAnswer(Answer,Answer):-number(Answer), Answer > 0.
-moneyAvailableAnswer(_,Money):-write('Wrong Input'),nl,nl,!,moneyAvailable(Money). 
+moneyAvailableAnswer(_,Money):-write('Money is not Sufficient!'),nl,nl,!,moneyAvailable(Money). 
 
 
 daysOfConference(Days):-	nl,write('How many days of Conference?'),nl,
 						read(Answer), daysOfConferenceAnswer(Answer,Days).
 						
 daysOfConferenceAnswer(Answer,Answer):-number(Answer), Answer > 0, Answer <7.
-daysOfConferenceAnswer(_,Days):-write('Wrong Input'),nl,nl,!,daysOfConference(Days).
+daysOfConferenceAnswer(_,Days):-write('Wrong Days Of Conference Input'),nl,nl,!,daysOfConference(Days).
 
 
 lecturePerDay(Lectures):-	nl,write('How many lectures of Conference?'),nl,
 						read(Answer), lecturePerDayAnswer(Answer,Lectures).
 						
 lecturePerDayAnswer(Answer,Answer):-number(Answer), Answer > 0, Answer <7.
-lecturePerDayAnswer(_,Lectures):-write('Wrong Input'),nl,nl,!,lecturePerDay(Lectures).
+lecturePerDayAnswer(_,Lectures):-write('Wrong Number of Lectures Input'),nl,nl,!,lecturePerDay(Lectures).
