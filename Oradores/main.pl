@@ -38,7 +38,11 @@ getIDFromList(ListOfSpeakers,ListOfID):-findall(ID,(member(Speaker,ListOfSpeaker
 
 
 getListOfMoneyAndID([],[]).
-getListOfMoneyAndID([Speaker|ListOfSpeakers],ListOfMoney):-getListOfMoneyAndID(ListOfSpeakers,OtherList), nth0(4,Speaker,ID),nth0(2,Speaker,Money),append([ID],[Money],IDMoney),append([IDMoney],OtherList,ListOfMoney).
+getListOfMoneyAndID([Speaker|ListOfSpeakers],ListOfMoney):-getListOfMoneyAndID(ListOfSpeakers,OtherList), nth0(4,Speaker,ID),nth0(2,Speaker,Money),
+															append([ID],[Money],IDMoney),append([IDMoney],OtherList,ListOfMoney).
+getListOfIDGender([],[]).
+getListOfIDGender([Speaker|ListOfSpeakers],ListOfIDGender):-getListOfIDGender(ListOfSpeakers,OtherList),nth0(4,Speaker,ID),nth0(3,Speaker,Gender),
+																append([ID],[Gender],IDGender),append([IDGender],OtherList,ListOfIDGender).
 
 divide([],[],[]).
 divide([[ID|[Money|[]]]|List],[ID|IDList],[Money|MoneyList]):-divide(List,IDList,MoneyList).
@@ -49,11 +53,20 @@ createListOfPairs([Head|Tuple]):-length(Head,2),createListOfPairs(Tuple).
 sameRestricList([],[]).
 sameRestricList([Head1|List1],[Head2|List2]):-Head1 #= Head2,sameRestricList(List1,List2).
 
+abs2(X,X) :- X #>= 0, !.
+abs2(X,Y) :- Y #= -X.
+
 %restrictions
 
-sumCosts(ListOfLectures,Budget,ListOfSpeakers):-getListOfMoneyAndID(ListOfSpeakers,IDMoney),length(ListOfLectures,Length),length(Tuple,Length),createListOfPairs(Tuple),
-											table(Tuple,IDMoney),divide(Tuple,IDList,MoneyList),all_distinct(IDList),
+tupleWithList(ListOfLectures,Template,Tuple):-length(ListOfLectures,Length),length(Tuple,Length),createListOfPairs(Tuple),
+											table(Tuple,Template).
+
+sumCosts(ListOfLectures,Budget,ListOfSpeakers):-getListOfMoneyAndID(ListOfSpeakers,IDMoney),tupleWithList(ListOfLectures,IDMoney,Tuple),divide(Tuple,IDList,MoneyList),all_distinct(IDList),
 											sameRestricList(IDList,ListOfLectures),sum(MoneyList, #=<, Budget).
+
+differenceGender(ListOfLectures,ListOfSpeakers,Difference):-getListOfIDGender(ListOfSpeakers,ListOfIDGender),tupleWithList(ListOfLectures,ListOfIDGender,Tuple),divide(Tuple,IDList,GenderList),
+																all_distinct(IDList),sameRestricList(IDList,ListOfLectures),count(0,GenderList,#=,MenN),count(1,GenderList,#=,WomenN), Diff #= MenN - WomenN,
+																abs2(Diff,Difference),print('DIFF:'),print(Diff),print('/'),print(Difference),nl.
 %sum(ListOfMoney, #=<, Budget).
 
 everyLectureHasASpeaker([],_).
@@ -61,15 +74,16 @@ everyLectureHasASpeaker([Head|ListOfLectures],ListOfID):-element(_,ListOfID,Head
 
 %%startRestrictions
 %final list is ListOfLectures
-startRestrictions(ListOfLectures,_,Budget,ListOfSpeakers):-getIDFromList(ListOfSpeakers,ListOfID),
-			everyLectureHasASpeaker(ListOfLectures,ListOfID),all_distinct(ListOfLectures),
-																sumCosts(ListOfLectures,Budget,ListOfSpeakers).
+startRestrictions(ListOfLectures,_,Budget,ListOfSpeakers,Difference):-	getIDFromList(ListOfSpeakers,ListOfID),
+															everyLectureHasASpeaker(ListOfLectures,ListOfID),all_distinct(ListOfLectures),
+															sumCosts(ListOfLectures,Budget,ListOfSpeakers),
+															differenceGender(ListOfLectures,ListOfSpeakers,Difference).
 
 
 mainPred:-	daysOfConference(Days),lecturePerDay(Lectures), SizeOfList is Days*Lectures, moneyAvailable(Money),
-			length(ListOfLectures,SizeOfList), getAllSpeakers(ListOfSpeakers), startRestrictions(ListOfLectures,Days,Money,ListOfSpeakers),
+			length(ListOfLectures,SizeOfList), getAllSpeakers(ListOfSpeakers), startRestrictions(ListOfLectures,Days,Money,ListOfSpeakers,Difference),
 			nl,
-			labeling([],ListOfLectures),	
+			labeling([minimize(Difference)],ListOfLectures),	
 			nl,
 			write(ListOfLectures),nl.
 mainPred:-write('nop').
