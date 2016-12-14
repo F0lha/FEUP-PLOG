@@ -26,8 +26,30 @@ credits:-nl, write('Puzzle implementation made by Carolina Moreira'),nl, nl.
 
 getAllCountries(ListOfCountries):-findall(Country,orador(_,Country,_,_),List),removeDuplicates(List,ListOfCountries).
 
+getAllSpeakers(ListOfSpeakers):-findall([Name,Country,Price,Gender], orador(Name,Country,Price,Gender),List),addIDToEachSpeaker(List,ListOfSpeakers,0).
 
-mainPred:-daysOfConference(Days),lecturePerDay(Lectures), SizeOfList is Days*Lectures, moneyAvailable(Money),getAllCountries(ListOfCountries), write(ListOfCountries),  length(ListOfLectures,SizeOfList).
+addIDToEachSpeaker([],[],_).
+addIDToEachSpeaker([Speaker|Rest],[NewSpeaker|ListOfSpeakers],N):-append(Speaker,[N],NewSpeaker), N1 is N + 1,addIDToEachSpeaker(Rest,ListOfSpeakers, N1).
+
+createListOfLists([],_).
+createListOfLists([Head|ListOfLectures],Size):- length(Head,Size),createListOfLists(ListOfLectures,Size).
+
+getIDFromList(ListOfSpeakers,ListOfID):-findall(ID,(member(Speaker,ListOfSpeakers),nth1(5,Speaker,ID)),ListOfID), print(ListOfID).
+
+%restrictions
+
+everyLectureHasASpeaker([],_).
+everyLectureHasASpeaker([Head|ListOfLectures],ListOfID):-member(Head,ListOfID),everyLectureHasASpeaker(ListOfLectures,ListOfID).
+
+%%startRestrictions
+%final list is ListOfLectures
+startRestrictions(ListOfLectures,Days,Money,ListOfSpeakers):-getIDFromList(ListOfSpeakers,ListOfID),everyLectureHasASpeaker(ListOfLectures,ListOfID),all_distinct(ListOfLectures).
+
+
+mainPred:-	daysOfConference(Days),lecturePerDay(Lectures), SizeOfList is Days*Lectures, moneyAvailable(Money),
+			length(ListOfLectures,SizeOfList), getAllSpeakers(ListOfSpeakers), startRestrictions(ListOfLectures,Days,Money,ListOfSpeakers),
+			labeling([],ListOfLectures),
+			write(ListOfLectures).
 
 moneyAvailable(Money):-	nl,write('How much money Available?'),nl,
 						read(Answer), moneyAvailableAnswer(Answer,Money).

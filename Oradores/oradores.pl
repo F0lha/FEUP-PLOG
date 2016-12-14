@@ -12,5 +12,3 @@ orador("Mariana",brazil,250,feminino).
 orador("Sergio",espanha,150,masculino).
 
 orador("Sara",espanha,150,feminino).
-
-orador("Pedro",portugal,50).
