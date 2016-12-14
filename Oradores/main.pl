@@ -44,6 +44,10 @@ getListOfIDGender([],[]).
 getListOfIDGender([Speaker|ListOfSpeakers],ListOfIDGender):-getListOfIDGender(ListOfSpeakers,OtherList),nth0(4,Speaker,ID),nth0(3,Speaker,Gender),
 																append([ID],[Gender],IDGender),append([IDGender],OtherList,ListOfIDGender).
 
+getListOfIDCountry([],[]).
+getListOfIDCountry([Speaker|ListOfSpeakers],ListOfIDCounty):-getListOfIDCountry(ListOfSpeakers,OtherList),nth0(4,Speaker,ID),nth0(1,Speaker,Country),
+																append([ID],[Country],IDCountry),append([IDCountry],OtherList,ListOfIDCounty).
+
 divide([],[],[]).
 divide([[ID|[Money|[]]]|List],[ID|IDList],[Money|MoneyList]):-divide(List,IDList,MoneyList).
 
@@ -66,18 +70,21 @@ sumCosts(ListOfLectures,Budget,ListOfSpeakers):-getListOfMoneyAndID(ListOfSpeake
 
 differenceGender(ListOfLectures,ListOfSpeakers,Difference):-getListOfIDGender(ListOfSpeakers,ListOfIDGender),tupleWithList(ListOfLectures,ListOfIDGender,Tuple),divide(Tuple,IDList,GenderList),
 																all_distinct(IDList),sameRestricList(IDList,ListOfLectures),count(0,GenderList,#=,MenN),count(1,GenderList,#=,WomenN), Diff #= MenN - WomenN,
-																abs2(Diff,Difference),print('DIFF:'),print(Diff),print('/'),print(Difference),nl.
-%sum(ListOfMoney, #=<, Budget).
+																abs2(Diff,Difference).
 
 everyLectureHasASpeaker([],_).
 everyLectureHasASpeaker([Head|ListOfLectures],ListOfID):-element(_,ListOfID,Head),everyLectureHasASpeaker(ListOfLectures,ListOfID).
+
+differentCountries(ListOfLectures,ListOfSpeakers):-getListOfIDCountry(ListOfSpeakers,ListOfIDCounty),tupleWithList(ListOfLectures,ListOfIDCounty,Tuple),divide(Tuple,IDList,CountryList),all_distinct(IDList),
+													sameRestricList(IDList,ListOfLectures), all_distinct(CountryList).
 
 %%startRestrictions
 %final list is ListOfLectures
 startRestrictions(ListOfLectures,_,Budget,ListOfSpeakers,Difference):-	getIDFromList(ListOfSpeakers,ListOfID),
 															everyLectureHasASpeaker(ListOfLectures,ListOfID),all_distinct(ListOfLectures),
 															sumCosts(ListOfLectures,Budget,ListOfSpeakers),
-															differenceGender(ListOfLectures,ListOfSpeakers,Difference).
+															differenceGender(ListOfLectures,ListOfSpeakers,Difference),
+															differentCountries(ListOfLectures,ListOfSpeakers).
 
 
 mainPred:-	daysOfConference(Days),lecturePerDay(Lectures), SizeOfList is Days*Lectures, moneyAvailable(Money),
