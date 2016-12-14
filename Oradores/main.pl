@@ -34,22 +34,38 @@ addIDToEachSpeaker([Speaker|Rest],[NewSpeaker|ListOfSpeakers],N):-append(Speaker
 createListOfLists([],_).
 createListOfLists([Head|ListOfLectures],Size):- length(Head,Size),createListOfLists(ListOfLectures,Size).
 
-getIDFromList(ListOfSpeakers,ListOfID):-findall(ID,(member(Speaker,ListOfSpeakers),nth1(5,Speaker,ID)),ListOfID), print(ListOfID).
+getIDFromList(ListOfSpeakers,ListOfID):-findall(ID,(member(Speaker,ListOfSpeakers),nth1(5,Speaker,ID)),ListOfID).
+
+
+getListOfMoneyAndID([],[]).
+getListOfMoneyAndID([Speaker|ListOfSpeakers],ListOfMoney):-getListOfMoneyAndID(ListOfSpeakers,OtherList), nth0(4,Speaker,ID),nth0(2,Speaker,Money),append([ID],[Money],IDMoney),append([IDMoney],OtherList,ListOfMoney).
+
+divide([],[],[]).
+divide([[ID|[Money]]|List],[ID|IDList],[Money|MoneyList]):-divide(List,IDList,MoneyList).
 
 %restrictions
 
+sumCosts(ListOfLectures,_,ListOfSpeakers):-getListOfMoneyAndID(ListOfSpeakers,IDMoney),print('IDMoney '),print(IDMoney),nl,table(Tuple,IDMoney), divide(Tuple,IDList,MoneyList),print('ups'),
+											element(_,ListOfLectures,ID),element(_,IDList,ID),nl,print(Tuple).
+%sum(ListOfMoney, #=<, Budget).
+
 everyLectureHasASpeaker([],_).
-everyLectureHasASpeaker([Head|ListOfLectures],ListOfID):-member(Head,ListOfID),everyLectureHasASpeaker(ListOfLectures,ListOfID).
+everyLectureHasASpeaker([Head|ListOfLectures],ListOfID):-element(_,ListOfID,Head),everyLectureHasASpeaker(ListOfLectures,ListOfID).
 
 %%startRestrictions
 %final list is ListOfLectures
-startRestrictions(ListOfLectures,Days,Money,ListOfSpeakers):-getIDFromList(ListOfSpeakers,ListOfID),everyLectureHasASpeaker(ListOfLectures,ListOfID),all_distinct(ListOfLectures).
+startRestrictions(ListOfLectures,_,Budget,ListOfSpeakers):-getIDFromList(ListOfSpeakers,ListOfID),
+			everyLectureHasASpeaker(ListOfLectures,ListOfID),all_distinct(ListOfLectures),
+																sumCosts(ListOfLectures,Budget,ListOfSpeakers).
 
 
 mainPred:-	daysOfConference(Days),lecturePerDay(Lectures), SizeOfList is Days*Lectures, moneyAvailable(Money),
 			length(ListOfLectures,SizeOfList), getAllSpeakers(ListOfSpeakers), startRestrictions(ListOfLectures,Days,Money,ListOfSpeakers),
-			labeling([],ListOfLectures),
+			!,
+			labeling([],ListOfLectures),nl,
 			write(ListOfLectures).
+mainPred:-write('nop').
+
 
 moneyAvailable(Money):-	nl,write('How much money Available?'),nl,
 						read(Answer), moneyAvailableAnswer(Answer,Money).

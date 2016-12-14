@@ -1,7 +1,7 @@
 %oradores
 
 
-orador("Pedro",portugal,50,masculino).
+orador("Pedro",portugal,500,masculino).
 
 orador("Andre",brazil,200,masculino).
 
