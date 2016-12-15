@@ -44,18 +44,18 @@ sameRestricList([],[]).
 sameRestricList([Head1|List1],[Head2|List2]):-Head1 #= Head2,sameRestricList(List1,List2).
 
 abs2(X,X) :- X #>= 0, !.
-abs2(X,Y) :- Y #= -X.
+abs2(X,Y) :- Y #= -1*X.
 
 %restrictions
 
 tupleWithList(ListOfLectures,Template,Tuple):-length(ListOfLectures,Length),length(Tuple,Length),createListOfPairs(Tuple),
 											table(Tuple,Template).
 
-sumCosts(ListOfLectures,Budget,ListOfSpeakers):-getListOfMoneyAndID(ListOfSpeakers,IDMoney),tupleWithList(ListOfLectures,IDMoney,Tuple),divide(Tuple,IDList,MoneyList),all_distinct(IDList),
+sumCosts(ListOfLectures,Budget,ListOfSpeakers):-getListOfMoneyAndID(ListOfSpeakers,IDMoney),tupleWithList(ListOfLectures,IDMoney,Tuple),divide(Tuple,IDList,MoneyList),
 											sameRestricList(IDList,ListOfLectures),sum(MoneyList, #=<, Budget).
 
 differenceGender(ListOfLectures,ListOfSpeakers,Difference):-getListOfIDGender(ListOfSpeakers,ListOfIDGender),tupleWithList(ListOfLectures,ListOfIDGender,Tuple),divide(Tuple,IDList,GenderList),
-																all_distinct(IDList),sameRestricList(IDList,ListOfLectures),count(0,GenderList,#=,MenN),count(1,GenderList,#=,WomenN), Diff #= MenN - WomenN,
+																sameRestricList(IDList,ListOfLectures),count(0,GenderList,#=,MenN),count(1,GenderList,#=,WomenN), Diff #= MenN - WomenN,
 																abs2(Diff,Difference).
 
 everyLectureHasASpeaker([],_).
@@ -66,8 +66,8 @@ differentCountries(ListOfLectures,ListOfSpeakers):-getListOfIDCountry(ListOfSpea
 
 %%startRestrictions
 %final list is ListOfLectures
-startRestrictions(ListOfLectures,_,Budget,ListOfSpeakers,Difference):-	getIDFromList(ListOfSpeakers,ListOfID),
-															everyLectureHasASpeaker(ListOfLectures,ListOfID),all_distinct(ListOfLectures),print('Done Lectures'),nl,
+startRestrictions(ListOfLectures,_,Budget,ListOfSpeakers,Difference):-
+															all_distinct(ListOfLectures),print('Done Lectures'),nl,
 															sumCosts(ListOfLectures,Budget,ListOfSpeakers),print('Done Sum'),nl,
 															differenceGender(ListOfLectures,ListOfSpeakers,Difference),print('Done gender'),nl,
 															differentCountries(ListOfLectures,ListOfSpeakers),print('Done Country'),nl,print(ListOfLectures).
@@ -102,14 +102,14 @@ moneyAvailableAnswer(_,Money):-write('Money is not Sufficient!'),nl,nl,!,moneyAv
 daysOfConference(Days):-	nl,write('How many days of Conference?'),nl,
 						read(Answer), daysOfConferenceAnswer(Answer,Days).
 						
-daysOfConferenceAnswer(Answer,Answer):-number(Answer), Answer > 0, Answer <7.
+daysOfConferenceAnswer(Answer,Answer):-number(Answer), Answer > 0, Answer <8.
 daysOfConferenceAnswer(_,Days):-write('Wrong Days Of Conference Input'),nl,nl,!,daysOfConference(Days).
 
 
 lecturePerDay(Lectures):-	nl,write('How many lectures of Conference?'),nl,
 						read(Answer), lecturePerDayAnswer(Answer,Lectures).
 						
-lecturePerDayAnswer(Answer,Answer):-number(Answer), Answer > 0, Answer <7.
+lecturePerDayAnswer(Answer,Answer):-number(Answer), Answer > 0, Answer <8.
 lecturePerDayAnswer(_,Lectures):-write('Wrong Number of Lectures Input'),nl,nl,!,lecturePerDay(Lectures).
 
 menu:- nl, write('Welcome To Speakers'),nl,
