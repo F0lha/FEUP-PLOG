@@ -10,23 +10,9 @@ removeDuplicates([First | Rest], NewRest) :- member(First, Rest), removeDuplicat
 
 removeDuplicates([First | Rest], [First | NewRest]) :- removeDuplicates(Rest, NewRest).
 
-menu:- nl, write('Welcome To Speakers'),nl,
-nl,
-write('1 - Organize Speakers '),nl,
-write('2 - Credits '),nl,
-write('3 - Exit '),nl,
-read(Answer), menuAnswer(Answer).
+getAllCountries(ListOfCountries):-findall(Country,speaker(_,Country,_,_),List),removeDuplicates(List,ListOfCountries).
 
-menuAnswer(1):-mainPred,nl,nl,!,menu.
-menuAnswer(2):-credits,!,menu.
-menuAnswer(3):-!.
-menuAnswer(_):-write('Wrong Input'),nl,nl,!,menu.
-
-credits:-nl, write('Puzzle implementation made by Carolina Moreira'),nl, nl.
-
-getAllCountries(ListOfCountries):-findall(Country,orador(_,Country,_,_),List),removeDuplicates(List,ListOfCountries).
-
-getAllSpeakers(ListOfSpeakers):-findall([Name,Country,Price,Gender], orador(Name,Country,Price,Gender),List),addIDToEachSpeaker(List,ListOfSpeakers,0).
+getAllSpeakers(ListOfSpeakers):-findall([Name,Country,Price,Gender], speaker(Name,Country,Price,Gender),List),addIDToEachSpeaker(List,ListOfSpeakers,0).
 
 addIDToEachSpeaker([],[],_).
 addIDToEachSpeaker([Speaker|Rest],[NewSpeaker|ListOfSpeakers],N):-append(Speaker,[N],NewSpeaker), N1 is N + 1,addIDToEachSpeaker(Rest,ListOfSpeakers, N1).
@@ -81,20 +67,30 @@ differentCountries(ListOfLectures,ListOfSpeakers):-getListOfIDCountry(ListOfSpea
 %%startRestrictions
 %final list is ListOfLectures
 startRestrictions(ListOfLectures,_,Budget,ListOfSpeakers,Difference):-	getIDFromList(ListOfSpeakers,ListOfID),
-															everyLectureHasASpeaker(ListOfLectures,ListOfID),all_distinct(ListOfLectures),
-															sumCosts(ListOfLectures,Budget,ListOfSpeakers),
-															differenceGender(ListOfLectures,ListOfSpeakers,Difference),
-															differentCountries(ListOfLectures,ListOfSpeakers).
+															everyLectureHasASpeaker(ListOfLectures,ListOfID),all_distinct(ListOfLectures),print('Done Lectures'),nl,
+															sumCosts(ListOfLectures,Budget,ListOfSpeakers),print('Done Sum'),nl,
+															differenceGender(ListOfLectures,ListOfSpeakers,Difference),print('Done gender'),nl,
+															differentCountries(ListOfLectures,ListOfSpeakers),print('Done Country'),nl,print(ListOfLectures).
 
 
 mainPred:-	daysOfConference(Days),lecturePerDay(Lectures), SizeOfList is Days*Lectures, moneyAvailable(Money),
-			length(ListOfLectures,SizeOfList), getAllSpeakers(ListOfSpeakers), startRestrictions(ListOfLectures,Days,Money,ListOfSpeakers,Difference),
+			length(ListOfLectures,SizeOfList), getAllSpeakers(ListOfSpeakers), startRestrictions(ListOfLectures,Days,Money,ListOfSpeakers,Difference),print(Difference),
 			nl,
 			labeling([minimize(Difference)],ListOfLectures),	
 			nl,
-			write(ListOfLectures),nl.
+			printLectures(ListOfLectures,ListOfSpeakers).
 mainPred:-write('nop').
 
+%printing
+
+printLectures([],_).
+printLectures([Lecture|ListOfLectures],ListOfSpeakers):-nth0(Lecture,ListOfSpeakers,Speaker), printLecture(Speaker),nl,printLectures(ListOfLectures,ListOfSpeakers).
+
+printLecture([Name|Speaker]):-write(Name),printLecture2(Speaker).
+printLecture2([Country|Speaker]):-country(Country,NameOfCountry),write(' of '),write(NameOfCountry),printLecture3(Speaker).
+printLecture3([Cost|Speaker]):-write(' costs '),write(Cost),printLecture4(Speaker).
+printLecture4([0|_]):-write(' and is Male.').
+printLecture4([1|_]):-write(' and is Female.').
 
 moneyAvailable(Money):-	nl,write('How much money Available?'),nl,
 						read(Answer), moneyAvailableAnswer(Answer,Money).
@@ -115,3 +111,17 @@ lecturePerDay(Lectures):-	nl,write('How many lectures of Conference?'),nl,
 						
 lecturePerDayAnswer(Answer,Answer):-number(Answer), Answer > 0, Answer <7.
 lecturePerDayAnswer(_,Lectures):-write('Wrong Number of Lectures Input'),nl,nl,!,lecturePerDay(Lectures).
+
+menu:- nl, write('Welcome To Speakers'),nl,
+nl,
+write('1 - Organize Speakers '),nl,
+write('2 - Credits '),nl,
+write('3 - Exit '),nl,
+read(Answer), menuAnswer(Answer).
+
+menuAnswer(1):-mainPred,nl,nl,!,menu.
+menuAnswer(2):-credits,!,menu.
+menuAnswer(3):-!.
+menuAnswer(_):-write('Wrong Input'),nl,nl,!,menu.
+
+credits:-nl, write('Puzzle implementation made by Carolina Moreira'),nl, nl.
