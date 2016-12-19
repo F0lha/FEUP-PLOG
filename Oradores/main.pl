@@ -12,7 +12,7 @@ removeDuplicates([First | Rest], [First | NewRest]) :- removeDuplicates(Rest, Ne
 
 getAllCountries(ListOfCountries):-findall(Country,speaker(_,Country,_,_),List),removeDuplicates(List,ListOfCountries).
 
-getAllSpeakers(ListOfSpeakers):-findall([Name,Country,Price,Gender], speaker(Name,Country,Price,Gender),List),addIDToEachSpeaker(List,ListOfSpeakers,0).
+getAllSpeakers(ListOfSpeakers):-findall([Name,Country,Price,Gender,Topic], speaker(Name,Country,Price,Gender,Topic),List),addIDToEachSpeaker(List,ListOfSpeakers,0).
 
 addIDToEachSpeaker([],[],_).
 addIDToEachSpeaker([Speaker|Rest],[NewSpeaker|ListOfSpeakers],N):-append(Speaker,[N],NewSpeaker), N1 is N + 1,addIDToEachSpeaker(Rest,ListOfSpeakers, N1).
@@ -20,19 +20,23 @@ addIDToEachSpeaker([Speaker|Rest],[NewSpeaker|ListOfSpeakers],N):-append(Speaker
 createListOfLists([],_).
 createListOfLists([Head|ListOfLectures],Size):- length(Head,Size),createListOfLists(ListOfLectures,Size).
 
-getIDFromList(ListOfSpeakers,ListOfID):-findall(ID,(member(Speaker,ListOfSpeakers),nth1(5,Speaker,ID)),ListOfID).
+getIDFromList(ListOfSpeakers,ListOfID):-findall(ID,(member(Speaker,ListOfSpeakers),nth0(5,Speaker,ID)),ListOfID).
 
 
 getListOfMoneyAndID([],[]).
-getListOfMoneyAndID([Speaker|ListOfSpeakers],ListOfMoney):-getListOfMoneyAndID(ListOfSpeakers,OtherList), nth0(4,Speaker,ID),nth0(2,Speaker,Money),
+getListOfMoneyAndID([Speaker|ListOfSpeakers],ListOfMoney):-getListOfMoneyAndID(ListOfSpeakers,OtherList), nth0(5,Speaker,ID),nth0(2,Speaker,Money),
 															append([ID],[Money],IDMoney),append([IDMoney],OtherList,ListOfMoney).
 getListOfIDGender([],[]).
-getListOfIDGender([Speaker|ListOfSpeakers],ListOfIDGender):-getListOfIDGender(ListOfSpeakers,OtherList),nth0(4,Speaker,ID),nth0(3,Speaker,Gender),
+getListOfIDGender([Speaker|ListOfSpeakers],ListOfIDGender):-getListOfIDGender(ListOfSpeakers,OtherList),nth0(5,Speaker,ID),nth0(3,Speaker,Gender),
 																append([ID],[Gender],IDGender),append([IDGender],OtherList,ListOfIDGender).
 
 getListOfIDCountry([],[]).
-getListOfIDCountry([Speaker|ListOfSpeakers],ListOfIDCounty):-getListOfIDCountry(ListOfSpeakers,OtherList),nth0(4,Speaker,ID),nth0(1,Speaker,Country),
+getListOfIDCountry([Speaker|ListOfSpeakers],ListOfIDCounty):-getListOfIDCountry(ListOfSpeakers,OtherList),nth0(5,Speaker,ID),nth0(1,Speaker,Country),
 																append([ID],[Country],IDCountry),append([IDCountry],OtherList,ListOfIDCounty).
+
+getListIDTopic([],[]).
+getListIDTopic([Speaker|ListOfSpeakers],ListOfIDTopic):-getListIDTopic(ListOfSpeakers,OtherList),nth0(5,Speaker,ID),nth0(1,Speaker,Topic),
+																append([ID],[Topic],IDTopic),append([IDTopic],OtherList,ListOfIDTopic).
 
 divide([],[],[]).
 divide([[ID|[Money|[]]]|List],[ID|IDList],[Money|MoneyList]):-divide(List,IDList,MoneyList).
@@ -52,45 +56,55 @@ tupleWithList(ListOfLectures,Template,Tuple):-length(ListOfLectures,Length),leng
 											table(Tuple,Template).
 
 sumCosts(ListOfLectures,Budget,ListOfSpeakers):-getListOfMoneyAndID(ListOfSpeakers,IDMoney),tupleWithList(ListOfLectures,IDMoney,Tuple),divide(Tuple,IDList,MoneyList),
-											sameRestricList(IDList,ListOfLectures),sum(MoneyList, #=<, Budget).
+											sameRestricList(ListOfLectures,IDList),sum(MoneyList, #=<, Budget).
 
 differenceGender(ListOfLectures,ListOfSpeakers,Difference):-getListOfIDGender(ListOfSpeakers,ListOfIDGender),tupleWithList(ListOfLectures,ListOfIDGender,Tuple),divide(Tuple,IDList,GenderList),
-																sameRestricList(IDList,ListOfLectures),count(0,GenderList,#=,MenN),count(1,GenderList,#=,WomenN), Diff #= MenN - WomenN,
-																abs2(Diff,Difference).
+																sameRestricList(ListOfLectures,IDList),count(0,GenderList,#=,MenN),count(1,GenderList,#=,WomenN), 
+																Diff #= MenN - WomenN, Difference #= abs(Diff).
 
-everyLectureHasASpeaker([],_).
-everyLectureHasASpeaker([Head|ListOfLectures],ListOfID):-element(_,ListOfID,Head),everyLectureHasASpeaker(ListOfLectures,ListOfID).
-
-differentCountries(ListOfLectures,ListOfSpeakers):-getListOfIDCountry(ListOfSpeakers,ListOfIDCounty),tupleWithList(ListOfLectures,ListOfIDCounty,Tuple),divide(Tuple,IDList,CountryList),all_distinct(IDList),
+differentCountries(ListOfLectures,ListOfSpeakers):-getListOfIDCountry(ListOfSpeakers,ListOfIDCounty),tupleWithList(ListOfLectures,ListOfIDCounty,Tuple),divide(Tuple,IDList,CountryList),
 													sameRestricList(IDList,ListOfLectures), all_distinct(CountryList).
+
+getTopicsOfDay([],_,_,[]).
+getTopicsOfDay([Head|Rest],IDList,TopicList,[Head2|Rest2]):-element(Index1,IDList,Head),element(Index2,TopicList,Topic),Head2 #= Topic, Index1 #= Index2, getTopicsOfDay(Rest,IDList,TopicList,Rest2).
+
+restrictTopics([],_,_).
+restrictTopics([Head|Rest],IDList,TopicsList):-getTopicsOfDay(Head,IDList,TopicsList,Topics), all_distinct(Topics), restrictTopics(Rest,IDList,TopicsList).
+
+differentTopics(ListOfLecturesByDay,ListOfLectures,ListOfSpeakers):-getListIDTopic(ListOfSpeakers,ListOfIDTopics),tupleWithList(ListOfLectures,ListOfIDTopics,Tuple),divide(Tuple,IDList,TopicsList),
+																	sameRestricList(ListOfLectures,IDList),restrictTopics(ListOfLecturesByDay,IDList,TopicsList).
 
 %%startRestrictions
 %final list is ListOfLectures
-startRestrictions(ListOfLectures,_,Budget,ListOfSpeakers,Difference):-
-															all_distinct(ListOfLectures),print('Done Lectures'),nl,
-															sumCosts(ListOfLectures,Budget,ListOfSpeakers),print('Done Sum'),nl,
-															differenceGender(ListOfLectures,ListOfSpeakers,Difference),print('Done gender'),nl,
-															differentCountries(ListOfLectures,ListOfSpeakers),print('Done Country'),nl,print(ListOfLectures).
+startRestrictions(ListOfLectures,ListOfLecturesByDay,Budget,ListOfSpeakers,Difference):-length(ListOfSpeakers,Length), domain(ListOfLectures,0,Length),
+															all_distinct(ListOfLectures),write('Done Lectures'),nl,
+															sumCosts(ListOfLectures,Budget,ListOfSpeakers),write('Done Sum'),nl,
+															differenceGender(ListOfLectures,ListOfSpeakers,Difference),write('Done gender'),nl,
+															differentCountries(ListOfLectures,ListOfSpeakers),write('Done Country'),
+															differentTopics(ListOfLecturesByDay,ListOfLectures,ListOfSpeakers),write(ListOfLectures),nl,write('Done Topics').
+listOnList([],_).
+listOnList([Head|Rest],Size):-length(Head,Size),listOnList(Rest,Size).
 
-
-mainPred:-	daysOfConference(Days),lecturePerDay(Lectures), SizeOfList is Days*Lectures, moneyAvailable(Money),
-			length(ListOfLectures,SizeOfList), getAllSpeakers(ListOfSpeakers), startRestrictions(ListOfLectures,Days,Money,ListOfSpeakers,Difference),print(Difference),
+mainPred:-	daysOfConference(Days),lecturePerDay(Lectures), moneyAvailable(Money),length(ListOfLecturesByDay,Days),listOnList(ListOfLecturesByDay,Lectures),
+			append(ListOfLecturesByDay,ListOfLectures), nl,nl,write(ListOfLecturesByDay),write('/'),write(ListOfLectures),nl,nl,
+			getAllSpeakers(ListOfSpeakers), startRestrictions(ListOfLectures,ListOfLecturesByDay,Money,ListOfSpeakers,Difference),
 			nl,
-			labeling([minimize(Difference)],ListOfLectures),	
+			labeling([minimize(Difference),ffc],ListOfLectures),	
 			nl,
-			printLectures(ListOfLectures,ListOfSpeakers).
+			writeLectures(ListOfLectures,ListOfSpeakers).
 mainPred:-write('nop').
 
-%printing
+%writeing
 
-printLectures([],_).
-printLectures([Lecture|ListOfLectures],ListOfSpeakers):-nth0(Lecture,ListOfSpeakers,Speaker), printLecture(Speaker),nl,printLectures(ListOfLectures,ListOfSpeakers).
+writeLectures([],_).
+writeLectures([Lecture|ListOfLectures],ListOfSpeakers):-nth0(Lecture,ListOfSpeakers,Speaker), writeLecture(Speaker),nl,writeLectures(ListOfLectures,ListOfSpeakers).
 
-printLecture([Name|Speaker]):-write(Name),printLecture2(Speaker).
-printLecture2([Country|Speaker]):-country(Country,NameOfCountry),write(' of '),write(NameOfCountry),printLecture3(Speaker).
-printLecture3([Cost|Speaker]):-write(' costs '),write(Cost),printLecture4(Speaker).
-printLecture4([0|_]):-write(' and is Male.').
-printLecture4([1|_]):-write(' and is Female.').
+writeLecture([Name|Speaker]):-write(Name),writeLecture2(Speaker).
+writeLecture2([Country|Speaker]):-country(Country,NameOfCountry),write(' of '),write(NameOfCountry),writeLecture3(Speaker).
+writeLecture3([Cost|Speaker]):-write(' costs '),write(Cost),writeLecture4(Speaker).
+writeLecture4([Gender|[Topic|_]]):-topic(Topic,NameOfTopic),write(', talks about '),write(NameOfTopic),writeLecture5([Gender]).
+writeLecture5([0|_]):-write(' and is Male.').
+writeLecture5([1|_]):-write(' and is Female.').
 
 moneyAvailable(Money):-	nl,write('How much money Available?'),nl,
 						read(Answer), moneyAvailableAnswer(Answer,Money).
