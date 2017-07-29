@@ -2,7 +2,7 @@
 
 These projects was developed for the unit course Logic Programming (PLOG) of the Integrated Masters in Informatics and Computing Engineering of the Faculty of Engineering of the University of Porto.
 
-The unit course objectives is to develop skills for abstract reasoning and declarative problem representation and for constraint logic programming.
+The unit course objectives are to develop skills for abstract reasoning and declarative problem representation and for constraint logic programming.
 
 The end result of this repository are a combination of several projects:
 
